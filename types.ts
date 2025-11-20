@@ -1,3 +1,4 @@
+
 export enum UserRole {
   ADMIN = 'ADMIN',
   PROJECT_MANAGER = 'PROJECT_MANAGER',
@@ -17,14 +18,24 @@ export enum TaskStatus {
   TODO = 'TODO',
   IN_PROGRESS = 'IN_PROGRESS',
   REVIEW = 'REVIEW',
-  DONE = 'DONE'
+  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
+  DONE = 'DONE',
+  LOCKED = 'LOCKED' // Dependent on other tasks
 }
 
-export enum TaskPriority {
+export enum Priority {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
   URGENT = 'URGENT'
+}
+
+export interface Badge {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  xpValue: number;
 }
 
 export interface User {
@@ -34,6 +45,41 @@ export interface User {
   role: UserRole;
   department: Department;
   avatar: string;
+  hourlyRate: number;
+  skills: string[];
+  jobTitle?: string; // Added jobTitle
+  password?: string;
+  xp?: number;
+  level?: number;
+  badges?: string[]; // Badge IDs
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  logo: string;
+  email: string;
+  totalRevenue: number;
+}
+
+export interface Asset {
+  id: string;
+  projectId: string;
+  taskId?: string;
+  name: string;
+  url: string;
+  type: 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  uploadedBy: string;
+  createdAt: string;
+  version: number;
+}
+
+export interface Comment {
+  id: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+  type?: 'GENERAL' | 'FEEDBACK' | 'APPROVAL';
 }
 
 export interface SubTask {
@@ -42,22 +88,71 @@ export interface SubTask {
   isCompleted: boolean;
 }
 
-export interface Task {
+export interface TimeEntry {
   id: string;
-  title: string;
+  taskId: string;
+  userId: string;
+  startTime: string;
+  endTime: string | null;
+  durationSeconds: number;
+  description?: string;
+  isBillable: boolean;
+}
+
+export interface Expense {
+  id: string;
+  projectId: string;
   description: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  assigneeId: string;
-  reporterId: string; // The PM who assigned it
-  department: Department;
-  dueDate: string;
-  createdAt: string;
-  subtasks: SubTask[];
+  amount: number;
+  category: 'Talent' | 'Location' | 'Equipment' | 'Software' | 'Other';
+  date: string;
+}
+
+export interface Project {
+  id: string;
+  clientId: string;
+  title: string;
+  jobCode?: string;
+  description: string;
+  managerId: string;
+  deadline: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'ON_HOLD' | 'PLANNING';
+  budget: number;
+  expenses: number; // Calculated from Expense entries
   tags: string[];
 }
 
-export interface AuthState {
-  currentUser: User | null;
-  isAuthenticated: boolean;
+export interface Task {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: Priority;
+  assigneeId: string;
+  reporterId: string;
+  department: Department;
+  dueDate: string;
+  createdAt: string;
+  completedDate?: string;
+  subtasks: SubTask[];
+  tags: string[];
+  timeSpentSeconds: number;
+  estimatedSeconds: number;
+  dependencies: string[]; // IDs of tasks that must be completed before this one
+  comments: Comment[];
+  assets: Asset[];
+}
+
+export interface ShootEvent {
+  id: string;
+  projectId: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay?: boolean;
+  location?: string;
+  crewIds: string[];
+  type: 'SHOOT' | 'MEETING' | 'RECCE' | 'TRAVEL';
+  description?: string;
 }
