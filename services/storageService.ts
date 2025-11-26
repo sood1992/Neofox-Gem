@@ -441,6 +441,26 @@ export class StorageService {
     localStorage.setItem(KEYS.POSITIONS, JSON.stringify(positions));
   }
 
+  static createPosition(position: JobPosition): void {
+    this.savePosition(position);
+  }
+
+  static updatePosition(id: string, position: JobPosition): void {
+    this.savePosition(position);
+  }
+
+  // ============================================
+  // CANDIDATE UPDATE/CREATE OPERATIONS
+  // ============================================
+
+  static updateCandidate(id: string, candidate: Candidate): void {
+    this.saveCandidate(candidate);
+  }
+
+  static createCandidate(candidate: Candidate): void {
+    this.saveCandidate(candidate);
+  }
+
   // ============================================
   // CANDIDATE ANALYSIS OPERATIONS
   // ============================================

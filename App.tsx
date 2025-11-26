@@ -117,6 +117,132 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
                     positions={positions}
                 />
             );
+        case 'bulk-analyze':
+            if (currentUser.role === UserRole.EMPLOYEE) {
+                return <div className="p-8 text-center text-dark-muted">Access Restricted</div>;
+            }
+            // Redirect to candidates page for bulk analysis
+            setActiveTab('candidates');
+            return null;
+        case 'team':
+            if (currentUser.role === UserRole.EMPLOYEE) {
+                return <div className="p-8 text-center text-dark-muted">Access Restricted</div>;
+            }
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <div>
+                        <h1 className="text-2xl font-bold text-dark-text mb-2">Team Members</h1>
+                        <p className="text-dark-muted">Manage HR team members and their permissions</p>
+                    </div>
+                    <div className="bg-dark-card rounded-xl border border-dark-border p-12 text-center">
+                        <svg className="w-16 h-16 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-dark-text mb-2">Team Management</h3>
+                        <p className="text-sm text-dark-muted mb-4">
+                            Manage your HR team members, roles, and permissions
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                            {users.map(user => (
+                                <div key={user.id} className="bg-dark-bg rounded-lg p-4 border border-dark-border">
+                                    <img src={user.avatar} className="w-16 h-16 rounded-full mx-auto mb-3 border-2 border-primary" alt={user.name} />
+                                    <h4 className="font-semibold text-dark-text text-center">{user.name}</h4>
+                                    <p className="text-xs text-dark-muted text-center mt-1">{user.role.replace('_', ' ')}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        case 'settings':
+            if (currentUser.role !== UserRole.ADMIN) {
+                return <div className="p-8 text-center text-dark-muted">Access Restricted</div>;
+            }
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <div>
+                        <h1 className="text-2xl font-bold text-dark-text mb-2">System Settings</h1>
+                        <p className="text-dark-muted">Configure system preferences and integrations</p>
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-dark-card rounded-xl border border-dark-border p-6">
+                            <h3 className="text-lg font-bold text-dark-text mb-4">AI Analysis Settings</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-dark-text mb-2">Analysis Weights</label>
+                                    <p className="text-xs text-dark-muted mb-2">Configure scoring weights for candidate evaluation</p>
+                                    <div className="space-y-2 text-sm text-dark-muted">
+                                        <div className="flex justify-between"><span>Technical Skills:</span><span>25%</span></div>
+                                        <div className="flex justify-between"><span>Experience:</span><span>20%</span></div>
+                                        <div className="flex justify-between"><span>Education:</span><span>10%</span></div>
+                                        <div className="flex justify-between"><span>Cultural Fit:</span><span>15%</span></div>
+                                        <div className="flex justify-between"><span>Other Parameters:</span><span>30%</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-dark-card rounded-xl border border-dark-border p-6">
+                            <h3 className="text-lg font-bold text-dark-text mb-4">Email Notifications</h3>
+                            <div className="space-y-4">
+                                <label className="flex items-center gap-3">
+                                    <input type="checkbox" defaultChecked className="w-4 h-4" />
+                                    <span className="text-sm text-dark-text">Notify on new applications</span>
+                                </label>
+                                <label className="flex items-center gap-3">
+                                    <input type="checkbox" defaultChecked className="w-4 h-4" />
+                                    <span className="text-sm text-dark-text">Daily summary reports</span>
+                                </label>
+                                <label className="flex items-center gap-3">
+                                    <input type="checkbox" className="w-4 h-4" />
+                                    <span className="text-sm text-dark-text">Weekly analytics digest</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div className="bg-dark-card rounded-xl border border-dark-border p-6">
+                            <h3 className="text-lg font-bold text-dark-text mb-4">Integrations</h3>
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between p-3 bg-dark-bg rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                            <span className="text-blue-500 font-bold">Li</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-dark-text">LinkedIn</p>
+                                            <p className="text-xs text-dark-muted">Import profiles</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-green-500 font-medium">Connected</span>
+                                </div>
+                                <div className="flex items-center justify-between p-3 bg-dark-bg rounded-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                            <span className="text-purple-500 font-bold">Sl</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-dark-text">Slack</p>
+                                            <p className="text-xs text-dark-muted">Team notifications</p>
+                                        </div>
+                                    </div>
+                                    <button className="text-xs text-primary font-medium hover:underline">Connect</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-dark-card rounded-xl border border-dark-border p-6">
+                            <h3 className="text-lg font-bold text-dark-text mb-4">Data & Privacy</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-sm text-dark-text mb-2">Storage</p>
+                                    <p className="text-xs text-dark-muted">Using LocalStorage (Demo Mode)</p>
+                                    <p className="text-xs text-warning mt-1">⚠️ For production, configure PostgreSQL database</p>
+                                </div>
+                                <button className="w-full bg-danger/10 hover:bg-danger/20 text-danger px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Clear All Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
         default:
             return <div className="text-center text-dark-muted mt-20">Select a module from the sidebar</div>;
     }
