@@ -11,6 +11,8 @@ import { ComparisonTool } from './components/ComparisonTool';
 import { PositionsManagement } from './components/PositionsManagement';
 import { PipelineView } from './components/PipelineView';
 import { StorageService } from './services/storageService';
+import { DemoDataService } from './services/demoDataService';
+import { DemoModeToggle, DemoModeBanner } from './components/DemoModeToggle';
 import { User, Candidate, JobPosition, UserRole } from './types';
 
 // Notification Toast Component
@@ -41,16 +43,42 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
   const [showComparison, setShowComparison] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{message: string, type: 'success' | 'info' | 'error'} | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(DemoDataService.isDemoMode());
 
   const refreshData = () => {
-    setCandidates(StorageService.getCandidates());
-    setPositions(StorageService.getPositions());
-    setUsers(StorageService.getUsers());
+    if (isDemoMode) {
+      // Load demo data
+      setCandidates(DemoDataService.getDemoCandidates());
+      setPositions(DemoDataService.getDemoPositions());
+      setUsers(DemoDataService.getDemoUsers());
+    } else {
+      // Load real data from storage
+      setCandidates(StorageService.getCandidates());
+      setPositions(StorageService.getPositions());
+      setUsers(StorageService.getUsers());
+    }
+  };
+
+  const handleToggleDemoMode = () => {
+    if (isDemoMode) {
+      DemoDataService.disableDemoMode();
+      setIsDemoMode(false);
+      setToast({ message: 'Demo mode disabled. Switched to real workspace.', type: 'info' });
+    } else {
+      DemoDataService.enableDemoMode();
+      setIsDemoMode(true);
+      setToast({ message: 'Demo mode enabled. Exploring with sample data.', type: 'info' });
+    }
+    // Refresh data after toggling
+    setTimeout(() => {
+      refreshData();
+      setActiveTab('dashboard'); // Return to dashboard on mode switch
+    }, 100);
   };
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [isDemoMode]);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -266,6 +294,9 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
             onSearchChange={handleSearchChange}
         />
 
+        {/* Demo Mode Banner */}
+        {isDemoMode && <DemoModeBanner onExit={handleToggleDemoMode} />}
+
         <main className="flex-1 px-8 pb-8 pt-4 overflow-y-auto custom-scrollbar">
             {renderContent()}
         </main>
@@ -304,6 +335,9 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
               onClose={() => setToast(null)}
           />
       )}
+
+      {/* Demo Mode Toggle */}
+      <DemoModeToggle isDemoMode={isDemoMode} onToggle={handleToggleDemoMode} />
     </div>
   );
 };
