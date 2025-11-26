@@ -498,3 +498,419 @@ export interface Notification {
   read: boolean;
   createdAt: string;
 }
+
+// ============================================
+// ADVANCED FEATURES - TOP PERFORMER CLONING
+// ============================================
+
+export interface TopPerformerProfile {
+  id: string;
+  employeeId: string;
+  name: string;
+  role: string;
+  department: string;
+  performanceScore: number; // 0-100
+  tenure: number; // months
+  promotions: number;
+  skills: string[];
+  education: Education;
+  careerPath: CareerStep[];
+  personality: {
+    workStyle: string[];
+    communication: string;
+    leadership: string;
+    collaboration: string;
+  };
+  achievements: string[];
+  projectSuccess: number; // 0-100
+  culturalAlignment: number; // 0-100
+  addedBy: string;
+  addedAt: string;
+}
+
+export interface CareerStep {
+  company: string;
+  position: string;
+  startDate: string;
+  endDate?: string;
+  duration: number; // months
+  achievements: string[];
+}
+
+export interface TopPerformerMatch {
+  candidateId: string;
+  topPerformerId: string;
+  overallSimilarity: number; // 0-100
+  matchDetails: {
+    skillMatch: number;
+    careerPathSimilarity: number;
+    educationMatch: number;
+    personalityMatch: number;
+    experienceAlignment: number;
+  };
+  strengths: string[];
+  gaps: string[];
+  recommendation: string;
+  confidence: number; // 0-100
+}
+
+// ============================================
+// CAREER MOMENTUM MAPPING
+// ============================================
+
+export interface CareerMomentum {
+  candidateId: string;
+  trajectory: 'ACCELERATING' | 'STEADY' | 'PLATEAUED' | 'DECLINING' | 'TRANSITIONING';
+  velocityScore: number; // 0-100, rate of career advancement
+  analysis: {
+    promotionRate: number; // promotions per year
+    skillAcquisitionRate: number; // new skills per year
+    responsibilityGrowth: string; // description
+    companyProgression: string; // startup to enterprise, etc.
+    salaryGrowth: number; // percentage over time
+  };
+  timelineEvents: CareerTimelineEvent[];
+  projectedPath: string; // AI prediction of next 2-3 years
+  momentumFactors: {
+    positive: string[];
+    negative: string[];
+    neutral: string[];
+  };
+  riskFactors: string[];
+  opportunities: string[];
+}
+
+export interface CareerTimelineEvent {
+  date: string;
+  type: 'PROMOTION' | 'JOB_CHANGE' | 'SKILL_ACQUIRED' | 'CERTIFICATION' | 'PROJECT' | 'ACHIEVEMENT';
+  description: string;
+  impact: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+// ============================================
+// REVERSE ROLE MATCHING
+// ============================================
+
+export interface ReverseMatching {
+  candidateId: string;
+  analyzedAt: string;
+  bestFitRoles: RoleMatchResult[];
+  surprisingMatches: RoleMatchResult[]; // positions they'd excel at but might not apply for
+  skillGapAnalysis: {
+    roleId: string;
+    roleName: string;
+    requiredSkills: string[];
+    candidateSkills: string[];
+    missingSkills: string[];
+    trainableIn: string; // e.g., "2-3 months"
+  }[];
+  recommendations: string[];
+}
+
+export interface RoleMatchResult {
+  positionId: string;
+  positionTitle: string;
+  department: string;
+  fitScore: number; // 0-100
+  reasoning: string;
+  strengths: string[];
+  developmentAreas: string[];
+  timeToProductivity: string; // e.g., "1-2 months"
+  confidenceLevel: number; // 0-100
+}
+
+// ============================================
+// FLIGHT RISK & COUNTER-OFFER PREDICTION
+// ============================================
+
+export interface FlightRiskAssessment {
+  candidateId: string;
+  flightRiskScore: number; // 0-100, higher = more likely to leave current job
+  counterOfferProbability: number; // 0-100
+  riskFactors: {
+    careerStagnation: boolean;
+    belowMarketCompensation: boolean;
+    longTenure: boolean;
+    recentPromotionMissed: boolean;
+    industryTrends: boolean;
+    skillsInDemand: boolean;
+  };
+  indicators: {
+    jobSearchSignals: string[]; // resume updated recently, active on LinkedIn, etc.
+    satisfactionSignals: string[];
+    ambitionSignals: string[];
+  };
+  counterOfferLikelihood: {
+    currentEmployerValue: number; // how much they value the employee
+    replaceabilityScore: number; // how hard to replace
+    estimatedCounterOfferRange: {
+      min: number;
+      max: number;
+      currency: string;
+    };
+  };
+  mitigationStrategies: string[];
+  bestApproachTiming: string;
+}
+
+// ============================================
+// TAILORED INTERVIEW QUESTIONS
+// ============================================
+
+export interface TailoredInterviewQuestion {
+  id: string;
+  category: 'TECHNICAL' | 'BEHAVIORAL' | 'SITUATIONAL' | 'CULTURE_FIT' | 'LEADERSHIP' | 'PROBLEM_SOLVING';
+  question: string;
+  reasoning: string; // Why this question for this candidate
+  lookingFor: string[]; // Key points in ideal answer
+  redFlags: string[]; // Warning signs in answer
+  followUpQuestions: string[];
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  priority: 'CRITICAL' | 'IMPORTANT' | 'NICE_TO_HAVE';
+  linkedToSkill?: string;
+  linkedToExperience?: string;
+}
+
+export interface InterviewQuestionSet {
+  candidateId: string;
+  positionId: string;
+  generatedAt: string;
+  questions: TailoredInterviewQuestion[];
+  structure: {
+    openingQuestions: string[];
+    coreQuestions: string[];
+    closingQuestions: string[];
+  };
+  focusAreas: string[];
+  estimatedDuration: number; // minutes
+}
+
+// ============================================
+// HIDDEN GEM DETECTION
+// ============================================
+
+export interface HiddenGemAnalysis {
+  candidateId: string;
+  isHiddenGem: boolean;
+  gemScore: number; // 0-100
+  hiddenStrengths: {
+    transferableSkills: TransferableSkill[];
+    nonTraditionalBackground: string[];
+    uniquePerspectives: string[];
+    undervaluedExperience: string[];
+  };
+  whyOverlooked: string[];
+  realPotential: string;
+  developmentPath: string;
+  riskMitigation: string[];
+  testimonialValue: string; // diversity, unique background story
+}
+
+export interface TransferableSkill {
+  skill: string;
+  fromContext: string; // where they learned it
+  applicableTo: string; // how it applies to target role
+  strength: number; // 0-100
+  examples: string[];
+}
+
+// ============================================
+// TEAM CHEMISTRY PREDICTION
+// ============================================
+
+export interface TeamChemistryPrediction {
+  candidateId: string;
+  targetTeamId?: string;
+  overallChemistryScore: number; // 0-100
+  workingStyleCompatibility: {
+    candidateStyle: string[];
+    teamAverageStyle: string[];
+    compatibility: number; // 0-100
+    potentialConflicts: string[];
+    synergies: string[];
+  };
+  communicationFit: {
+    candidatePreference: string;
+    teamNorm: string;
+    alignment: number; // 0-100
+  };
+  diversityImpact: {
+    bringsNewPerspective: boolean;
+    skillDiversity: number; // 0-100
+    backgroundDiversity: number; // 0-100
+    thoughtDiversity: number; // 0-100
+  };
+  potentialMentors: string[]; // team member IDs
+  potentialMentees: string[]; // team member IDs
+  integrationTimeline: string;
+  recommendations: string[];
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  workStyle: string[];
+  skills: string[];
+  personality: string;
+  tenure: number; // months
+}
+
+export interface TeamComposition {
+  teamId: string;
+  teamName: string;
+  department: string;
+  members: TeamMember[];
+  currentDynamics: string;
+  needsAnalysis: string[];
+}
+
+// ============================================
+// REFERENCE CHECK QUESTIONS
+// ============================================
+
+export interface ReferenceCheckQuestion {
+  id: string;
+  category: 'PERFORMANCE' | 'WORK_ETHIC' | 'TEAMWORK' | 'LEADERSHIP' | 'GROWTH' | 'RED_FLAGS';
+  question: string;
+  targetedAt: string; // specific claim or experience from resume
+  reasoning: string;
+  idealAnswer: string;
+  concerningAnswers: string[];
+  followUpIf: {
+    condition: string;
+    question: string;
+  };
+  priority: 'CRITICAL' | 'IMPORTANT' | 'OPTIONAL';
+}
+
+export interface ReferenceCheckGuide {
+  candidateId: string;
+  generatedAt: string;
+  questions: ReferenceCheckQuestion[];
+  focusAreas: string[];
+  verificationPoints: {
+    claim: string;
+    source: string; // resume, interview, etc.
+    howToVerify: string;
+    priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  }[];
+  redFlagsToWatch: string[];
+}
+
+// ============================================
+// OFFER ACCEPTANCE PROBABILITY
+// ============================================
+
+export interface OfferAcceptancePrediction {
+  candidateId: string;
+  positionId: string;
+  acceptanceProbability: number; // 0-100
+  factors: {
+    compensationAlignment: {
+      offered: number;
+      expected: number;
+      marketRate: number;
+      satisfaction: number; // 0-100
+    };
+    careerGrowth: {
+      alignsWithGoals: boolean;
+      growthPotential: number; // 0-100
+      learningOpportunities: string[];
+    };
+    locationFit: {
+      commute: string;
+      relocationRequired: boolean;
+      locationPreference: number; // 0-100
+    };
+    companyFit: {
+      cultureAlignment: number; // 0-100
+      brandAppeal: number; // 0-100
+      missionAlignment: number; // 0-100
+    };
+    competingOffers: {
+      likely: boolean;
+      estimatedCount: number;
+      betterPositioned: boolean;
+    };
+  };
+  negotiationLikelihood: number; // 0-100
+  counterOfferRisk: number; // 0-100
+  decisionTimeline: string;
+  optimizationSuggestions: {
+    strengthenOffer: string[];
+    addressConcerns: string[];
+    emphasize: string[];
+  };
+  closingStrategy: string;
+}
+
+// ============================================
+// TALENT POOL CATEGORIZATION
+// ============================================
+
+export interface TalentPoolCategory {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  icon?: string;
+  criteria: {
+    minScore?: number;
+    maxScore?: number;
+    skills?: string[];
+    experience?: string[];
+    tags?: string[];
+    customRules?: string;
+  };
+  action: {
+    followUpTimeline: string;
+    nurturingStrategy: string;
+    reassessmentInterval: number; // days
+    autoNotifications: boolean;
+  };
+}
+
+export interface CandidatePoolAssignment {
+  candidateId: string;
+  categories: {
+    categoryId: string;
+    categoryName: string;
+    assignedAt: string;
+    confidence: number; // 0-100
+    reason: string;
+  }[];
+  tags: string[];
+  nextReviewDate: string;
+  developmentPlan?: string;
+  notes: string;
+}
+
+// ============================================
+// COMBINED ADVANCED ANALYSIS
+// ============================================
+
+export interface AdvancedCandidateAnalysis {
+  candidateId: string;
+  analyzedAt: string;
+
+  // All advanced features combined
+  topPerformerMatch?: TopPerformerMatch;
+  careerMomentum?: CareerMomentum;
+  reverseMatching?: ReverseMatching;
+  flightRisk?: FlightRiskAssessment;
+  interviewQuestions?: InterviewQuestionSet;
+  hiddenGemAnalysis?: HiddenGemAnalysis;
+  teamChemistry?: TeamChemistryPrediction;
+  referenceCheckGuide?: ReferenceCheckGuide;
+  offerAcceptance?: OfferAcceptancePrediction;
+  poolAssignment?: CandidatePoolAssignment;
+
+  // Overall insights
+  overallRecommendation: string;
+  hiringConfidence: number; // 0-100
+  uniqueValue: string;
+  risks: string[];
+  opportunities: string[];
+  nextSteps: string[];
+}
