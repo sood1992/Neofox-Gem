@@ -5,15 +5,15 @@ import { StorageService } from '../services/storageService';
 interface CandidatesListProps {
   candidates: Candidate[];
   positions: JobPosition[];
-  onSelectCandidate: (candidate: Candidate) => void;
-  onAnalyze: (candidate: Candidate, position: JobPosition) => void;
+  onCandidateClick: (candidate: Candidate) => void;
+  onCandidateUpdate: () => void;
 }
 
 export const CandidatesList: React.FC<CandidatesListProps> = ({
   candidates,
   positions,
-  onSelectCandidate,
-  onAnalyze
+  onCandidateClick,
+  onCandidateUpdate
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CandidateStatus | 'ALL'>('ALL');
@@ -269,11 +269,11 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                     src={`https://ui-avatars.com/api/?name=${candidate.firstName}+${candidate.lastName}&background=random`}
                     alt={`${candidate.firstName} ${candidate.lastName}`}
                     className="w-14 h-14 rounded-full"
-                    onClick={() => onSelectCandidate(candidate)}
+                    onClick={() => onCandidateClick(candidate)}
                   />
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0" onClick={() => onSelectCandidate(candidate)}>
+                  <div className="flex-1 min-w-0" onClick={() => onCandidateClick(candidate)}>
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-dark-text">
                         {candidate.firstName} {candidate.lastName}
@@ -310,11 +310,11 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onAnalyze(candidate, positions[0]);
+                          onCandidateClick(candidate);
                         }}
                         className="px-3 py-1 text-xs bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
                       >
-                        Analyze
+                        View Details
                       </button>
                     )}
                   </div>
@@ -335,7 +335,7 @@ export const CandidatesList: React.FC<CandidatesListProps> = ({
                 className={`bg-dark-card rounded-xl p-6 border transition-all hover:shadow-md cursor-pointer ${
                   isSelected ? 'border-primary shadow-lg shadow-primary/20' : 'border-dark-border'
                 }`}
-                onClick={() => onSelectCandidate(candidate)}
+                onClick={() => onCandidateClick(candidate)}
               >
                 <div className="flex items-start justify-between mb-4">
                   <input

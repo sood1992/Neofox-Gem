@@ -96,6 +96,7 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
         case 'upload':
             return (
                 <BulkUpload
+                    currentUser={currentUser}
                     positions={positions}
                     onUploadComplete={() => {
                         refreshData();
