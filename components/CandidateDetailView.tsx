@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Candidate, JobPosition, CandidateAnalysis, CandidateStatus, Note, User } from '../types';
 import { StorageService } from '../services/storageService';
 import { AIAnalysisService } from '../services/aiAnalysisService';
+import { AdvancedAnalysisDashboard } from './AdvancedAnalysisDashboard';
 import { format } from 'date-fns';
 
 interface CandidateDetailViewProps {
@@ -19,7 +20,7 @@ export const CandidateDetailView: React.FC<CandidateDetailViewProps> = ({
   onUpdate,
   currentUser
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'advanced' | 'activity'>('overview');
   const [analysis, setAnalysis] = useState<CandidateAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [noteText, setNoteText] = useState('');
@@ -146,7 +147,7 @@ export const CandidateDetailView: React.FC<CandidateDetailViewProps> = ({
         {/* Tabs */}
         <div className="border-b border-dark-border bg-dark-bg px-6">
           <div className="flex gap-6">
-            {(['overview', 'analysis', 'activity'] as const).map(tab => (
+            {(['overview', 'analysis', 'advanced', 'activity'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -476,6 +477,17 @@ export const CandidateDetailView: React.FC<CandidateDetailViewProps> = ({
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === 'advanced' && selectedPosition && (
+            <AdvancedAnalysisDashboard
+              candidate={candidate}
+              position={selectedPosition}
+              allPositions={positions}
+              topPerformers={[]} // Can be populated from storage in the future
+              teamComposition={undefined} // Can be populated from storage in the future
+              offeredSalary={undefined} // Can be set when making an offer
+            />
           )}
 
           {activeTab === 'activity' && (

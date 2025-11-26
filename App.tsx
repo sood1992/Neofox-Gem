@@ -275,6 +275,7 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
           <CandidateDetailView
              candidate={selectedCandidate}
              positions={positions}
+             currentUser={currentUser}
              onClose={() => setSelectedCandidate(null)}
              onUpdate={(updatedCandidate) => {
                  StorageService.updateCandidate(updatedCandidate.id, updatedCandidate);
