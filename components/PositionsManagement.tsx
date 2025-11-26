@@ -28,11 +28,9 @@ export const PositionsManagement: React.FC<PositionsManagementProps> = ({ positi
       location: formData.get('location') as string,
       employmentType: formData.get('employmentType') as EmploymentType,
       experienceLevel: formData.get('experienceLevel') as ExperienceLevel,
-      salaryRange: {
-        min: parseInt(formData.get('salaryMin') as string),
-        max: parseInt(formData.get('salaryMax') as string),
-        currency: 'USD'
-      },
+      salaryMin: parseInt(formData.get('salaryMin') as string),
+      salaryMax: parseInt(formData.get('salaryMax') as string),
+      currency: 'USD',
       requiredSkills: (formData.get('requiredSkills') as string).split(',').map(s => s.trim()),
       preferredSkills: (formData.get('preferredSkills') as string).split(',').map(s => s.trim()).filter(Boolean),
       description: formData.get('description') as string,
@@ -65,11 +63,9 @@ export const PositionsManagement: React.FC<PositionsManagementProps> = ({ positi
       location: formData.get('location') as string,
       employmentType: formData.get('employmentType') as EmploymentType,
       experienceLevel: formData.get('experienceLevel') as ExperienceLevel,
-      salaryRange: {
-        min: parseInt(formData.get('salaryMin') as string),
-        max: parseInt(formData.get('salaryMax') as string),
-        currency: 'USD'
-      },
+      salaryMin: parseInt(formData.get('salaryMin') as string),
+      salaryMax: parseInt(formData.get('salaryMax') as string),
+      currency: 'USD',
       requiredSkills: (formData.get('requiredSkills') as string).split(',').map(s => s.trim()),
       preferredSkills: (formData.get('preferredSkills') as string).split(',').map(s => s.trim()).filter(Boolean),
       description: formData.get('description') as string,
@@ -209,7 +205,7 @@ export const PositionsManagement: React.FC<PositionsManagementProps> = ({ positi
                 <input
                   type="number"
                   name="salaryMin"
-                  defaultValue={position?.salaryRange?.min}
+                  defaultValue={position?.salaryMin}
                   required
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-dark-text focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   placeholder="80000"
@@ -221,7 +217,7 @@ export const PositionsManagement: React.FC<PositionsManagementProps> = ({ positi
                 <input
                   type="number"
                   name="salaryMax"
-                  defaultValue={position?.salaryRange?.max}
+                  defaultValue={position?.salaryMax}
                   required
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2 text-dark-text focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                   placeholder="120000"
@@ -438,7 +434,7 @@ export const PositionsManagement: React.FC<PositionsManagementProps> = ({ positi
                 <div>
                   <div className="text-xs text-dark-muted mb-1">Salary</div>
                   <div className="text-sm font-bold text-dark-text">
-                    ${(position.salaryRange.min / 1000).toFixed(0)}k - ${(position.salaryRange.max / 1000).toFixed(0)}k
+                    ${(position.salaryMin / 1000).toFixed(0)}k - ${(position.salaryMax / 1000).toFixed(0)}k
                   </div>
                 </div>
               </div>

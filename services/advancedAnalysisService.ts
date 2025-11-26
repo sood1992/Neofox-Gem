@@ -375,7 +375,7 @@ Return JSON with: trajectory, velocityScore, promotionRate, skillAcquisitionRate
     score += candidate.location.toLowerCase() === position.location.toLowerCase() ? 10 : 5;
 
     // Salary alignment (5%)
-    if (candidate.expectedSalary >= position.salaryRange.min && candidate.expectedSalary <= position.salaryRange.max) {
+    if (candidate.expectedSalary >= position.salaryMin && candidate.expectedSalary <= position.salaryMax) {
       score += 5;
     }
 
@@ -476,12 +476,12 @@ Return JSON with: trajectory, velocityScore, promotionRate, skillAcquisitionRate
 
     if (currentTenure > 48) flightRiskScore += 30; // Long tenure increases risk
     if (jobHopFrequency < 18) flightRiskScore += 25; // Frequent job changes
-    if (candidate.expectedSalary > position.salaryRange.max * 0.9) flightRiskScore += 20; // Near salary ceiling
+    if (candidate.expectedSalary > position.salaryMax * 0.9) flightRiskScore += 20; // Near salary ceiling
     if (candidate.skills.length > 15) flightRiskScore += 15; // High-demand skills
 
     const riskFactors = {
       careerStagnation: currentTenure > 60,
-      belowMarketCompensation: candidate.expectedSalary < position.salaryRange.min,
+      belowMarketCompensation: candidate.expectedSalary < position.salaryMin,
       longTenure: currentTenure > 48,
       recentPromotionMissed: false, // Can't determine from data
       industryTrends: true,
@@ -506,7 +506,7 @@ Return JSON with: trajectory, velocityScore, promotionRate, skillAcquisitionRate
         estimatedCounterOfferRange: {
           min: Math.round(candidate.expectedSalary * 1.1),
           max: Math.round(candidate.expectedSalary * 1.25),
-          currency: position.salaryRange.currency,
+          currency: position.currency,
         },
       },
       mitigationStrategies: [
@@ -1042,7 +1042,7 @@ Return JSON with: trajectory, velocityScore, promotionRate, skillAcquisitionRate
     position: JobPosition,
     offeredSalary: number
   ): OfferAcceptancePrediction {
-    const marketRate = (position.salaryRange.min + position.salaryRange.max) / 2;
+    const marketRate = (position.salaryMin + position.salaryMax) / 2;
     const salaryDiff = offeredSalary - candidate.expectedSalary;
     const salaryVsMarket = offeredSalary - marketRate;
 
