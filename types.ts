@@ -1,158 +1,500 @@
+// ============================================
+// HR CANDIDATE SCREENING TOOL - TYPE DEFINITIONS
+// ============================================
 
 export enum UserRole {
   ADMIN = 'ADMIN',
-  PROJECT_MANAGER = 'PROJECT_MANAGER',
-  EMPLOYEE = 'EMPLOYEE'
+  HR_MANAGER = 'HR_MANAGER',
+  RECRUITER = 'RECRUITER',
+  HIRING_MANAGER = 'HIRING_MANAGER',
+  TEAM_LEAD = 'TEAM_LEAD'
+}
+
+export enum CandidateStatus {
+  NEW = 'NEW',
+  SCREENING = 'SCREENING',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  SHORTLISTED = 'SHORTLISTED',
+  INTERVIEWING = 'INTERVIEWING',
+  OFFER = 'OFFER',
+  HIRED = 'HIRED',
+  REJECTED = 'REJECTED',
+  ON_HOLD = 'ON_HOLD'
+}
+
+export enum ExperienceLevel {
+  INTERN = 'INTERN',
+  ENTRY = 'ENTRY',
+  JUNIOR = 'JUNIOR',
+  MID = 'MID',
+  SENIOR = 'SENIOR',
+  LEAD = 'LEAD',
+  PRINCIPAL = 'PRINCIPAL',
+  EXECUTIVE = 'EXECUTIVE'
+}
+
+export enum EmploymentType {
+  FULL_TIME = 'FULL_TIME',
+  PART_TIME = 'PART_TIME',
+  CONTRACT = 'CONTRACT',
+  FREELANCE = 'FREELANCE',
+  INTERNSHIP = 'INTERNSHIP'
 }
 
 export enum Department {
-  PHOTOGRAPHY = 'Photography',
-  VIDEOGRAPHY = 'Videography',
-  VIDEO_EDITING = 'Video Editing',
-  STRATEGY = 'Creative Strategy',
-  MARKETING = 'Performance Marketing',
-  MANAGEMENT = 'Management'
+  ENGINEERING = 'Engineering',
+  PRODUCT = 'Product',
+  DESIGN = 'Design',
+  MARKETING = 'Marketing',
+  SALES = 'Sales',
+  OPERATIONS = 'Operations',
+  HR = 'Human Resources',
+  FINANCE = 'Finance',
+  CUSTOMER_SUCCESS = 'Customer Success',
+  DATA = 'Data & Analytics',
+  OTHER = 'Other'
 }
 
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  REVIEW = 'REVIEW',
-  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
-  DONE = 'DONE',
-  LOCKED = 'LOCKED' // Dependent on other tasks
-}
-
-export enum Priority {
+export enum RedFlagSeverity {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  URGENT = 'URGENT'
+  CRITICAL = 'CRITICAL'
 }
 
-export interface Badge {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  xpValue: number;
-}
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
-  department: Department;
   avatar: string;
-  hourlyRate: number;
-  skills: string[];
-  jobTitle?: string; // Added jobTitle
+  department?: Department;
   password?: string;
-  xp?: number;
-  level?: number;
-  badges?: string[]; // Badge IDs
+  createdAt: string;
 }
 
-export interface Client {
+// ============================================
+// JOB POSITIONS
+// ============================================
+
+export interface JobPosition {
+  id: string;
+  title: string;
+  department: Department;
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  preferredQualifications: string[];
+  experienceLevel: ExperienceLevel;
+  employmentType: EmploymentType;
+  location: string;
+  remote: boolean;
+  salaryMin: number;
+  salaryMax: number;
+  currency: string;
+  openings: number;
+  hiringManagerId: string;
+  createdAt: string;
+  deadline?: string;
+  status: 'OPEN' | 'PAUSED' | 'CLOSED' | 'FILLED';
+  customScoringCriteria?: ScoringCriteria;
+}
+
+// ============================================
+// CANDIDATE DATA
+// ============================================
+
+export interface Candidate {
+  id: string;
+  // Basic Info
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  githubUrl?: string;
+
+  // Professional Info
+  currentJobTitle?: string;
+  currentCompany?: string;
+  totalYearsExperience: number;
+  experienceLevel: ExperienceLevel;
+  expectedSalary?: number;
+  noticePeriod?: number; // in days
+  willingToRelocate: boolean;
+
+  // Application Details
+  appliedPositions: string[]; // JobPosition IDs
+  resumeUrl?: string;
+  coverLetter?: string;
+  source: 'DIRECT' | 'REFERRAL' | 'LINKEDIN' | 'JOB_BOARD' | 'RECRUITER' | 'OTHER';
+  referredBy?: string;
+
+  // Resume Parsed Data
+  summary?: string;
+  skills: string[];
+  education: Education[];
+  workExperience: WorkExperience[];
+  certifications: Certification[];
+  languages: Language[];
+
+  // Status & Tracking
+  status: CandidateStatus;
+  addedBy: string; // User ID
+  assignedTo?: string; // Recruiter/HR Manager ID
+  createdAt: string;
+  updatedAt: string;
+
+  // AI Analysis Results
+  aiAnalysis?: CandidateAnalysis;
+
+  // Metadata
+  tags: string[];
+  notes: Note[];
+  attachments: Attachment[];
+}
+
+export interface Education {
+  id: string;
+  institution: string;
+  degree: string;
+  field: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  gpa?: number;
+  achievements?: string[];
+}
+
+export interface WorkExperience {
+  id: string;
+  company: string;
+  position: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+  achievements: string[];
+  skills: string[];
+}
+
+export interface Certification {
   id: string;
   name: string;
-  logo: string;
-  email: string;
-  totalRevenue: number;
+  issuer: string;
+  issueDate: string;
+  expiryDate?: string;
+  credentialId?: string;
+  url?: string;
 }
 
-export interface Asset {
+export interface Language {
+  name: string;
+  proficiency: 'BASIC' | 'CONVERSATIONAL' | 'PROFESSIONAL' | 'NATIVE';
+}
+
+// ============================================
+// AI ANALYSIS & SCORING
+// ============================================
+
+export interface CandidateAnalysis {
+  candidateId: string;
+  positionId: string;
+  analyzedAt: string;
+
+  // Overall Score (0-100)
+  overallScore: number;
+  overallFit: 'POOR' | 'FAIR' | 'GOOD' | 'EXCELLENT' | 'OUTSTANDING';
+
+  // Detailed Scores
+  scores: {
+    technicalSkills: ScoreDetail;
+    experience: ScoreDetail;
+    education: ScoreDetail;
+    culturalFit: ScoreDetail;
+    communication: ScoreDetail;
+    leadershipPotential: ScoreDetail;
+    careerProgression: ScoreDetail;
+    salaryAlignment: ScoreDetail;
+    availability: ScoreDetail;
+    locationFit: ScoreDetail;
+  };
+
+  // Skills Analysis
+  skillsGapAnalysis: SkillsGapAnalysis;
+
+  // Red Flags
+  redFlags: RedFlag[];
+
+  // Strengths & Weaknesses
+  strengths: string[];
+  weaknesses: string[];
+
+  // Cultural Fit
+  culturalFitIndicators: CulturalFitIndicator[];
+
+  // Employment Gaps
+  employmentGaps: EmploymentGap[];
+
+  // Recommendations
+  recommendation: 'REJECT' | 'MAYBE' | 'INTERVIEW' | 'STRONG_YES';
+  reasoning: string;
+  detailedAnalysis: string;
+
+  // Interview Suggestions
+  suggestedInterviewQuestions: string[];
+  focusAreas: string[];
+}
+
+export interface ScoreDetail {
+  score: number; // 0-100
+  weight: number; // 0-1 (for weighted average)
+  reasoning: string;
+  evidence: string[];
+}
+
+export interface SkillsGapAnalysis {
+  requiredSkillsMet: SkillMatch[];
+  requiredSkillsMissing: SkillGap[];
+  preferredSkillsMet: SkillMatch[];
+  preferredSkillsMissing: SkillGap[];
+  additionalSkills: string[]; // Skills candidate has that weren't required
+  overallSkillMatch: number; // 0-100
+}
+
+export interface SkillMatch {
+  skill: string;
+  proficiencyLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+  yearsOfExperience: number;
+  evidence: string[];
+}
+
+export interface SkillGap {
+  skill: string;
+  importance: 'MUST_HAVE' | 'NICE_TO_HAVE';
+  canBeTrainedQuickly: boolean;
+  alternativeSkills: string[]; // Skills candidate has that are similar
+}
+
+export interface RedFlag {
   id: string;
-  projectId: string;
-  taskId?: string;
+  type: 'EMPLOYMENT_GAP' | 'FREQUENT_JOB_CHANGES' | 'SKILL_MISMATCH' |
+        'SALARY_MISMATCH' | 'LOCATION_ISSUE' | 'OVERQUALIFIED' |
+        'UNDERQUALIFIED' | 'INCONSISTENCY' | 'INCOMPLETE_INFO' | 'OTHER';
+  severity: RedFlagSeverity;
+  title: string;
+  description: string;
+  impact: string;
+  recommendation: string;
+}
+
+export interface CulturalFitIndicator {
+  trait: string;
+  alignment: 'STRONG' | 'MODERATE' | 'WEAK' | 'UNKNOWN';
+  evidence: string[];
+  reasoning: string;
+}
+
+export interface EmploymentGap {
+  startDate: string;
+  endDate: string;
+  durationMonths: number;
+  explanation?: string;
+  impact: 'NONE' | 'LOW' | 'MODERATE' | 'HIGH';
+}
+
+// ============================================
+// CUSTOM SCORING CRITERIA
+// ============================================
+
+export interface ScoringCriteria {
+  id: string;
+  positionId: string;
+  weights: {
+    technicalSkills: number;
+    experience: number;
+    education: number;
+    culturalFit: number;
+    communication: number;
+    leadershipPotential: number;
+    careerProgression: number;
+    salaryAlignment: number;
+    availability: number;
+    locationFit: number;
+  };
+  mustHaveSkills: string[];
+  niceToHaveSkills: string[];
+  dealBreakers: string[];
+  culturalValues: string[];
+}
+
+// ============================================
+// COLLABORATION & FEEDBACK
+// ============================================
+
+export interface Note {
+  id: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+  isPrivate: boolean;
+  tags: string[];
+}
+
+export interface TeamFeedback {
+  id: string;
+  candidateId: string;
+  positionId: string;
+  reviewerId: string;
+  reviewerName: string;
+  rating: number; // 1-5
+  feedback: string;
+  strengths: string[];
+  concerns: string[];
+  recommendation: 'REJECT' | 'MAYBE' | 'INTERVIEW' | 'HIRE';
+  createdAt: string;
+}
+
+export interface Attachment {
+  id: string;
   name: string;
   url: string;
-  type: 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  type: 'RESUME' | 'COVER_LETTER' | 'PORTFOLIO' | 'CERTIFICATE' | 'OTHER';
+  uploadedAt: string;
   uploadedBy: string;
-  createdAt: string;
-  version: number;
 }
 
-export interface Comment {
+// ============================================
+// ANALYTICS & REPORTING
+// ============================================
+
+export interface HiringMetrics {
+  // Time-based metrics
+  averageTimeToHire: number; // days
+  averageTimeToScreen: number; // days
+  averageTimeToInterview: number; // days
+
+  // Volume metrics
+  totalApplications: number;
+  screeningRate: number; // percentage
+  interviewRate: number; // percentage
+  offerRate: number; // percentage
+  acceptanceRate: number; // percentage
+
+  // Cost metrics
+  costPerHire: number;
+  costPerInterview: number;
+
+  // Quality metrics
+  averageCandidateScore: number;
+  sourceEffectiveness: SourceMetric[];
+  topPerformingSources: string[];
+
+  // Diversity metrics
+  diversityStats: {
+    genderDistribution: Record<string, number>;
+    locationDistribution: Record<string, number>;
+    experienceLevelDistribution: Record<string, number>;
+  };
+}
+
+export interface SourceMetric {
+  source: string;
+  applications: number;
+  hires: number;
+  conversionRate: number;
+  averageQualityScore: number;
+}
+
+// ============================================
+// COMPARISON & EXPORT
+// ============================================
+
+export interface CandidateComparison {
+  candidates: Candidate[];
+  position: JobPosition;
+  analyses: CandidateAnalysis[];
+  comparisonMatrix: ComparisonRow[];
+}
+
+export interface ComparisonRow {
+  category: string;
+  candidates: Record<string, any>; // candidateId -> value
+}
+
+// ============================================
+// SAVED SEARCHES & FILTERS
+// ============================================
+
+export interface SavedSearch {
+  id: string;
+  name: string;
+  createdBy: string;
+  createdAt: string;
+  filters: CandidateFilters;
+  isShared: boolean;
+  alertsEnabled: boolean;
+}
+
+export interface CandidateFilters {
+  positions?: string[];
+  status?: CandidateStatus[];
+  experienceLevel?: ExperienceLevel[];
+  minYearsExperience?: number;
+  maxYearsExperience?: number;
+  skills?: string[];
+  location?: string[];
+  minScore?: number;
+  maxScore?: number;
+  sources?: string[];
+  dateAddedFrom?: string;
+  dateAddedTo?: string;
+  keywords?: string;
+  excludeKeywords?: string;
+}
+
+// ============================================
+// BULK OPERATIONS
+// ============================================
+
+export interface BulkUploadJob {
+  id: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  totalFiles: number;
+  processedFiles: number;
+  successCount: number;
+  failureCount: number;
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  results: BulkUploadResult[];
+}
+
+export interface BulkUploadResult {
+  fileName: string;
+  status: 'SUCCESS' | 'FAILED';
+  candidateId?: string;
+  error?: string;
+}
+
+// ============================================
+// NOTIFICATIONS & ALERTS
+// ============================================
+
+export interface Notification {
   id: string;
   userId: string;
-  text: string;
+  type: 'NEW_CANDIDATE' | 'STATUS_CHANGE' | 'TEAM_FEEDBACK' | 'MATCH_ALERT' | 'REMINDER';
+  title: string;
+  message: string;
+  link?: string;
+  read: boolean;
   createdAt: string;
-  type?: 'GENERAL' | 'FEEDBACK' | 'APPROVAL';
-}
-
-export interface SubTask {
-  id: string;
-  title: string;
-  isCompleted: boolean;
-}
-
-export interface TimeEntry {
-  id: string;
-  taskId: string;
-  userId: string;
-  startTime: string;
-  endTime: string | null;
-  durationSeconds: number;
-  description?: string;
-  isBillable: boolean;
-}
-
-export interface Expense {
-  id: string;
-  projectId: string;
-  description: string;
-  amount: number;
-  category: 'Talent' | 'Location' | 'Equipment' | 'Software' | 'Other';
-  date: string;
-}
-
-export interface Project {
-  id: string;
-  clientId: string;
-  title: string;
-  jobCode?: string;
-  description: string;
-  managerId: string;
-  deadline: string;
-  status: 'ACTIVE' | 'COMPLETED' | 'ON_HOLD' | 'PLANNING';
-  budget: number;
-  expenses: number; // Calculated from Expense entries
-  tags: string[];
-}
-
-export interface Task {
-  id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  priority: Priority;
-  assigneeId: string;
-  reporterId: string;
-  department: Department;
-  dueDate: string;
-  createdAt: string;
-  completedDate?: string;
-  subtasks: SubTask[];
-  tags: string[];
-  timeSpentSeconds: number;
-  estimatedSeconds: number;
-  dependencies: string[]; // IDs of tasks that must be completed before this one
-  comments: Comment[];
-  assets: Asset[];
-}
-
-export interface ShootEvent {
-  id: string;
-  projectId: string;
-  title: string;
-  start: string;
-  end: string;
-  allDay?: boolean;
-  location?: string;
-  crewIds: string[];
-  type: 'SHOOT' | 'MEETING' | 'RECCE' | 'TRAVEL';
-  description?: string;
 }
