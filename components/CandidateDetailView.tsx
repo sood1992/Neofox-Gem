@@ -7,26 +7,24 @@ import { format } from 'date-fns';
 
 interface CandidateDetailViewProps {
   candidate: Candidate;
-  position?: JobPosition;
+  positions: JobPosition[];
+  currentUser: User;
   onClose: () => void;
   onUpdate: (candidate: Candidate) => void;
-  currentUser: User;
 }
 
 export const CandidateDetailView: React.FC<CandidateDetailViewProps> = ({
   candidate,
-  position,
+  positions,
+  currentUser,
   onClose,
-  onUpdate,
-  currentUser
+  onUpdate
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'analysis' | 'advanced' | 'activity'>('overview');
   const [analysis, setAnalysis] = useState<CandidateAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [noteText, setNoteText] = useState('');
-  const [selectedPosition, setSelectedPosition] = useState<JobPosition | undefined>(position);
-
-  const positions = StorageService.getPositions();
+  const [selectedPosition, setSelectedPosition] = useState<JobPosition | undefined>(undefined);
 
   useEffect(() => {
     if (selectedPosition) {

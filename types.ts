@@ -7,7 +7,8 @@ export enum UserRole {
   HR_MANAGER = 'HR_MANAGER',
   RECRUITER = 'RECRUITER',
   HIRING_MANAGER = 'HIRING_MANAGER',
-  TEAM_LEAD = 'TEAM_LEAD'
+  TEAM_LEAD = 'TEAM_LEAD',
+  EMPLOYEE = 'EMPLOYEE'
 }
 
 export enum CandidateStatus {

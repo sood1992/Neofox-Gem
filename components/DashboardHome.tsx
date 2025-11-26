@@ -5,11 +5,12 @@ import { StorageService } from '../services/storageService';
 interface DashboardHomeProps {
   candidates: Candidate[];
   positions: JobPosition[];
+  user: User;
   onViewCandidates: () => void;
   onAddCandidate: () => void;
 }
 
-export const DashboardHome: React.FC<DashboardHomeProps> = ({ candidates, positions, onViewCandidates, onAddCandidate }) => {
+export const DashboardHome: React.FC<DashboardHomeProps> = ({ candidates, positions, user, onViewCandidates, onAddCandidate }) => {
 
   // Calculate metrics
   const totalCandidates = candidates.length;

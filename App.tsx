@@ -64,6 +64,7 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
                 <DashboardHome
                     candidates={candidates}
                     positions={positions}
+                    user={currentUser}
                     onViewCandidates={() => setActiveTab('candidates')}
                     onAddCandidate={() => setActiveTab('upload')}
                 />
