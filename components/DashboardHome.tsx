@@ -1,196 +1,254 @@
-
 import React from 'react';
-import { User, Task, Project, UserRole, TaskStatus } from '../types';
+import { User, Candidate, JobPosition, CandidateStatus } from '../types';
 import { StorageService } from '../services/storageService';
 
 interface DashboardHomeProps {
-  user: User;
-  tasks: Task[];
-  projects: Project[];
-  onCreateTask?: () => void;
-  onViewTasks?: () => void; // Added prop
+  candidates: Candidate[];
+  positions: JobPosition[];
+  onViewCandidates: () => void;
+  onAddCandidate: () => void;
 }
 
-export const DashboardHome: React.FC<DashboardHomeProps> = ({ user, tasks, projects, onCreateTask, onViewTasks }) => {
-  
-  const isCreative = user.role === UserRole.EMPLOYEE;
-  const isAdmin = user.role === UserRole.ADMIN;
-  const badges = StorageService.getBadges();
+export const DashboardHome: React.FC<DashboardHomeProps> = ({ candidates, positions, onViewCandidates, onAddCandidate }) => {
 
-  // Metrics
-  const myTasks = tasks.filter(t => t.assigneeId === user.id);
-  const pendingTasks = myTasks.filter(t => t.status !== TaskStatus.DONE);
-  const completedTasksCount = myTasks.filter(t => t.status === TaskStatus.DONE).length;
-  const totalRevenue = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
-  const totalExpenses = projects.reduce((acc, p) => acc + (p.expenses || 0), 0);
-  
-  // Creative View
-  if (isCreative) {
-      const currentLevel = user.level || 1;
-      const currentXP = user.xp || 0;
-      const nextLevelXP = currentLevel * 500;
-      const xpProgress = (currentXP % 500) / 500 * 100;
-      const myBadges = badges.filter(b => user.badges?.includes(b.id));
+  // Calculate metrics
+  const totalCandidates = candidates.length;
+  const newCandidates = candidates.filter(c => c.status === CandidateStatus.NEW).length;
+  const shortlisted = candidates.filter(c => c.status === CandidateStatus.SHORTLISTED).length;
+  const interviewing = candidates.filter(c => c.status === CandidateStatus.INTERVIEWING).length;
+  const hired = candidates.filter(c => c.status === CandidateStatus.HIRED).length;
 
-      return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Welcome Banner */}
-                <div className="md:col-span-2 bg-dark-card rounded-xl shadow-sm p-8 relative overflow-hidden border border-dark-border">
-                    <div className="relative z-10">
-                        <h2 className="text-2xl font-bold text-primary mb-2">Welcome back, {user.name.split(' ')[0]}! 🚀</h2>
-                        <p className="text-dark-muted text-sm mb-6 max-w-md">You have <strong>{pendingTasks.length} tasks</strong> pending today. Your efficiency score is up 12% this week!</p>
-                        <div className="flex gap-3">
-                            <button 
-                                onClick={onViewTasks}
-                                className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all shadow-lg shadow-primary/30 transform hover:-translate-y-0.5"
-                            >
-                                View My Tasks
-                            </button>
-                            <button 
-                                onClick={onCreateTask}
-                                className="bg-dark-bg hover:bg-dark-border text-dark-text px-6 py-2.5 rounded-lg text-sm font-medium transition-all border border-dark-border"
-                            >
-                                + Create Task
-                            </button>
-                        </div>
-                    </div>
-                    {/* Decorative shapes */}
-                    <div className="absolute right-0 top-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                </div>
+  const openPositions = positions.filter(p => p.status === 'OPEN').length;
+  const analyses = StorageService.getAnalyses();
+  const analyzedCandidates = analyses.length;
 
-                {/* My Level (Gamification) */}
-                <div className="bg-dark-card rounded-xl shadow-sm p-6 border border-dark-border flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <span className="text-6xl">🏆</span>
-                    </div>
-                    <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-dark-muted font-medium text-sm uppercase tracking-wider">My Level</h3>
-                            <span className="bg-warning/10 text-warning px-2 py-1 rounded text-xs font-bold">Lvl {currentLevel}</span>
-                        </div>
-                        <div className="flex items-baseline gap-1 mt-1">
-                            <span className="text-3xl font-bold text-dark-text">{currentXP}</span>
-                            <span className="text-xs text-dark-muted">/ {nextLevelXP} XP</span>
-                        </div>
-                        <div className="w-full bg-dark-bg h-2 rounded-full mt-3 overflow-hidden border border-dark-border/50">
-                            <div className="bg-gradient-to-r from-warning to-orange-500 h-full rounded-full" style={{ width: `${xpProgress}%` }}></div>
-                        </div>
-                    </div>
-                    
-                    <div className="mt-4 pt-4 border-t border-dark-border">
-                        <p className="text-[10px] text-dark-muted uppercase font-bold mb-2">Recent Badges</p>
-                        <div className="flex gap-2">
-                            {myBadges.length > 0 ? myBadges.slice(0, 3).map(b => (
-                                <div key={b.id} className="w-8 h-8 rounded-full bg-dark-bg border border-dark-border flex items-center justify-center text-lg" title={b.name}>
-                                    {b.icon}
-                                </div>
-                            )) : <span className="text-xs text-dark-muted italic">No badges yet</span>}
-                        </div>
-                    </div>
-                </div>
-            </div>
+  // Recent candidates (last 5)
+  const recentCandidates = [...candidates]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
 
-            {/* My Tasks List */}
-            <div className="bg-dark-card rounded-xl border border-dark-border overflow-hidden shadow-sm">
-                <div className="p-6 border-b border-dark-border flex justify-between items-center">
-                    <h3 className="font-bold text-lg text-dark-text">Review Queue</h3>
-                </div>
-                <div className="divide-y divide-dark-border">
-                    {pendingTasks.slice(0, 5).map(task => (
-                        <div key={task.id} className="p-4 flex items-center justify-between hover:bg-dark-bg/50 transition-colors cursor-pointer">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-2 h-2 rounded-full ${task.priority === 'HIGH' || task.priority === 'URGENT' ? 'bg-danger' : 'bg-warning'}`}></div>
-                                <div>
-                                    <h4 className="text-sm font-semibold text-dark-text">{task.title}</h4>
-                                    <span className="text-xs text-dark-muted">Due {new Date(task.dueDate).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                            <span className="text-xs px-3 py-1 rounded-full bg-dark-bg border border-dark-border text-dark-muted font-medium">
-                                {task.status.replace('_', ' ')}
-                            </span>
-                        </div>
-                    ))}
-                    {pendingTasks.length === 0 && <div className="p-8 text-center text-dark-muted">No pending tasks. Great job!</div>}
-                </div>
-            </div>
-        </div>
-      );
-  }
+  // Top candidates by score
+  const topCandidates = analyses
+    .sort((a, b) => b.overallScore - a.overallScore)
+    .slice(0, 5)
+    .map(analysis => ({
+      ...candidates.find(c => c.id === analysis.candidateId)!,
+      score: analysis.overallScore,
+      fit: analysis.overallFit
+    }));
 
-  // Admin/Manager View
-  const users = StorageService.getUsers();
-  const leaderboard = [...users].sort((a, b) => (b.xp || 0) - (a.xp || 0)).slice(0, 5);
+  const getStatusColor = (status: CandidateStatus) => {
+    const colors: Record<CandidateStatus, string> = {
+      [CandidateStatus.NEW]: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+      [CandidateStatus.SCREENING]: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+      [CandidateStatus.UNDER_REVIEW]: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+      [CandidateStatus.SHORTLISTED]: 'bg-green-500/10 text-green-500 border-green-500/20',
+      [CandidateStatus.INTERVIEWING]: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+      [CandidateStatus.OFFER]: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+      [CandidateStatus.HIRED]: 'bg-success/10 text-success border-success/20',
+      [CandidateStatus.REJECTED]: 'bg-danger/10 text-danger border-danger/20',
+      [CandidateStatus.ON_HOLD]: 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+    };
+    return colors[status] || '';
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard title="Total Revenue" value={`₹${(totalRevenue/100000).toFixed(1)} L`} trend="+18%" trendUp={true} icon="dollar" />
-        <StatsCard title="Expenses" value={`₹${(totalExpenses/1000).toFixed(1)} K`} trend="-5%" trendUp={true} icon="chart" />
-        <StatsCard title="Active Projects" value={projects.filter(p => p.status === 'ACTIVE').length.toString()} trend="+2" trendUp={true} icon="briefcase" />
-        <StatsCard title="Pending Tasks" value={tasks.filter(t => t.status !== 'DONE').length.toString()} trend="-12%" trendUp={false} icon="list" />
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-primary to-primary-hover rounded-xl shadow-lg p-8 text-white">
+        <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name.split(' ')[0]}! 👋</h1>
+        <p className="text-white/90 mb-4">
+          You have <strong>{newCandidates} new candidates</strong> to review and <strong>{openPositions} open positions</strong> to fill.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onViewCandidates}
+            className="bg-white text-primary px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all shadow-md"
+          >
+            View All Candidates
+          </button>
+          <button
+            onClick={onAddCandidate}
+            className="bg-white/20 hover:bg-white/30 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all backdrop-blur-sm"
+          >
+            + Add Candidates
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Leaderboard (New Feature) */}
-         <div className="bg-dark-card rounded-xl border border-dark-border p-6 shadow-sm">
-             <h3 className="font-bold text-dark-text mb-6 flex items-center gap-2">
-                 <span>🏆</span> Team Leaderboard
-             </h3>
-             <div className="space-y-4">
-                 {leaderboard.map((u, idx) => (
-                     <div key={u.id} className="flex items-center gap-3">
-                         <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${idx === 0 ? 'bg-yellow-400 text-black' : idx === 1 ? 'bg-gray-300 text-black' : idx === 2 ? 'bg-orange-400 text-white' : 'bg-dark-bg text-dark-muted'}`}>
-                             {idx + 1}
-                         </div>
-                         <img src={u.avatar} className="w-8 h-8 rounded-full border border-dark-border" alt=""/>
-                         <div className="flex-1">
-                             <div className="text-sm font-medium text-dark-text truncate">{u.name}</div>
-                             <div className="text-[10px] text-dark-muted">Level {u.level || 1}</div>
-                         </div>
-                         <div className="text-sm font-bold text-primary">{u.xp || 0} XP</div>
-                     </div>
-                 ))}
-             </div>
-         </div>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-dark-card rounded-xl p-6 border border-dark-border shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-dark-muted">vs last month</span>
+          </div>
+          <h3 className="text-2xl font-bold text-dark-text mb-1">{totalCandidates}</h3>
+          <p className="text-sm text-dark-muted">Total Candidates</p>
+        </div>
 
-         {/* Project Health */}
-         <div className="lg:col-span-2 bg-dark-card rounded-xl border border-dark-border p-6 shadow-sm">
-             <h3 className="font-bold text-dark-text mb-6">Project Status</h3>
-             <div className="space-y-6">
-                 {projects.slice(0, 4).map(p => {
-                     const pTasks = tasks.filter(t => t.projectId === p.id);
-                     const pDone = pTasks.filter(t => t.status === 'DONE').length;
-                     const progress = pTasks.length > 0 ? (pDone / pTasks.length) * 100 : 0;
-                     return (
-                         <div key={p.id}>
-                             <div className="flex justify-between mb-2">
-                                 <span className="text-sm font-medium text-dark-text truncate max-w-[150px]">{p.title}</span>
-                                 <span className="text-xs text-dark-muted">{Math.round(progress)}%</span>
-                             </div>
-                             <div className="w-full bg-dark-bg h-2 rounded-full overflow-hidden">
-                                 <div className={`h-full rounded-full ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }}></div>
-                             </div>
-                         </div>
-                     );
-                 })}
-             </div>
-         </div>
+        <div className="bg-dark-card rounded-xl p-6 border border-dark-border shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-green-500">+12%</span>
+          </div>
+          <h3 className="text-2xl font-bold text-dark-text mb-1">{shortlisted}</h3>
+          <p className="text-sm text-dark-muted">Shortlisted</p>
+        </div>
+
+        <div className="bg-dark-card rounded-xl p-6 border border-dark-border shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-dark-muted">this week</span>
+          </div>
+          <h3 className="text-2xl font-bold text-dark-text mb-1">{interviewing}</h3>
+          <p className="text-sm text-dark-muted">In Interview</p>
+        </div>
+
+        <div className="bg-dark-card rounded-xl p-6 border border-dark-border shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-lg bg-success/10 flex items-center justify-center">
+              <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-success">+3 this month</span>
+          </div>
+          <h3 className="text-2xl font-bold text-dark-text mb-1">{hired}</h3>
+          <p className="text-sm text-dark-muted">Hired</p>
+        </div>
+      </div>
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Candidates */}
+        <div className="bg-dark-card rounded-xl p-6 border border-dark-border shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-dark-text">Recent Candidates</h2>
+            <button
+              onClick={onViewCandidates}
+              className="text-xs text-primary hover:text-primary-hover font-medium"
+            >
+              View All →
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {recentCandidates.length === 0 ? (
+              <p className="text-center text-dark-muted py-8">No candidates yet. Add some to get started!</p>
+            ) : (
+              recentCandidates.map((candidate) => (
+                <div
+                  key={candidate.id}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-dark-bg transition-colors cursor-pointer"
+                  onClick={onViewCandidates}
+                >
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${candidate.firstName}+${candidate.lastName}&background=random`}
+                    alt={`${candidate.firstName} ${candidate.lastName}`}
+                    className="w-12 h-12 rounded-full"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-dark-text truncate">
+                      {candidate.firstName} {candidate.lastName}
+                    </h3>
+                    <p className="text-sm text-dark-muted truncate">
+                      {candidate.currentJobTitle || 'No title'} • {candidate.totalYearsExperience}y exp
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${getStatusColor(candidate.status)}`}>
+                    {candidate.status.replace('_', ' ')}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Top Candidates by Score */}
+        <div className="bg-dark-card rounded-xl p-6 border border-dark-border shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-dark-text">Top Rated Candidates</h2>
+            <button
+              onClick={onViewCandidates}
+              className="text-xs text-primary hover:text-primary-hover font-medium"
+            >
+              View All →
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {topCandidates.length === 0 ? (
+              <p className="text-center text-dark-muted py-8">No analyzed candidates yet. Upload resumes to start!</p>
+            ) : (
+              topCandidates.map((candidate, index) => (
+                <div
+                  key={candidate.id}
+                  className="flex items-center gap-4 p-3 rounded-lg hover:bg-dark-bg transition-colors cursor-pointer"
+                  onClick={onViewCandidates}
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                    #{index + 1}
+                  </div>
+                  <img
+                    src={`https://ui-avatars.com/api/?name=${candidate.firstName}+${candidate.lastName}&background=random`}
+                    alt={`${candidate.firstName} ${candidate.lastName}`}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-dark-text truncate">
+                      {candidate.firstName} {candidate.lastName}
+                    </h3>
+                    <p className="text-xs text-dark-muted truncate">
+                      {candidate.currentJobTitle}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-primary">{candidate.score}</div>
+                    <div className="text-[10px] text-dark-muted uppercase">{candidate.fit}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Pipeline Overview */}
+      <div className="bg-dark-card rounded-xl p-6 border border-dark-border shadow-sm">
+        <h2 className="text-lg font-bold text-dark-text mb-6">Hiring Pipeline</h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {[
+            { status: CandidateStatus.NEW, count: newCandidates, label: 'New', color: 'blue' },
+            { status: CandidateStatus.SCREENING, count: candidates.filter(c => c.status === CandidateStatus.SCREENING).length, label: 'Screening', color: 'yellow' },
+            { status: CandidateStatus.SHORTLISTED, count: shortlisted, label: 'Shortlisted', color: 'green' },
+            { status: CandidateStatus.INTERVIEWING, count: interviewing, label: 'Interviewing', color: 'indigo' },
+            { status: CandidateStatus.OFFER, count: candidates.filter(c => c.status === CandidateStatus.OFFER).length, label: 'Offer', color: 'emerald' },
+          ].map((stage) => (
+            <div
+              key={stage.status}
+              className="text-center p-4 rounded-lg bg-dark-bg hover:bg-dark-border/30 transition-colors cursor-pointer"
+              onClick={onViewCandidates}
+            >
+              <div className={`text-3xl font-bold text-${stage.color}-500 mb-1`}>{stage.count}</div>
+              <div className="text-sm text-dark-muted">{stage.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
 };
-
-const StatsCard = ({ title, value, trend, trendUp, icon }: any) => (
-    <div className="bg-dark-card p-6 rounded-xl border border-dark-border shadow-sm hover:border-primary/30 transition-colors group">
-        <div className="flex justify-between items-start mb-4">
-            <div>
-                <p className="text-dark-muted text-xs font-bold uppercase tracking-wider">{title}</p>
-                <h3 className="text-2xl font-bold text-dark-text mt-1 group-hover:text-primary transition-colors">{value}</h3>
-            </div>
-            <div className={`p-2 rounded-lg ${trendUp ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
-                <span className="text-xs font-bold">{trend}</span>
-            </div>
-        </div>
-    </div>
-);
