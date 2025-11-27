@@ -16,6 +16,7 @@ import { CreateProjectModal } from './components/CreateProjectModal';
 import { UserManagement } from './components/UserManagement';
 import { StorageService } from './services/storageService';
 import { EmailService } from './services/emailService';
+import { HRDashboard } from './components/hr/HRDashboard';
 import { User, Task, TaskStatus, UserRole, TimeEntry, Project, Client } from './types';
 
 // Simple Toast Component
@@ -246,6 +247,9 @@ const MainLayout: React.FC<{ currentUser: User; onLogout: () => void }> = ({ cur
             return <Settings />;
         case 'shoot-calendar':
              return <ShootCalendar user={currentUser} users={users} projects={visibleProjects} />;
+        case 'hr-vetting':
+            if (currentUser.role === UserRole.EMPLOYEE) return <div className="p-8 text-center text-dark-muted">Access Restricted</div>;
+            return <HRDashboard currentUser={{ id: currentUser.id, name: currentUser.name, avatar: currentUser.avatar }} />;
         default:
             return <div className="text-center text-dark-muted mt-20">Select a module from the sidebar</div>;
     }
