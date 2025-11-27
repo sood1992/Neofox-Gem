@@ -3,47 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Foxhole | Enterprise Workspace</title>
+    <title>PawTag India | Smart QR Pet Tags</title>
+    <meta name="description" content="India's smartest pet tag with QR code. Never lose your pet again. Instant notifications, GPS location, and WhatsApp alerts." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Public Sans', 'sans-serif'],
+              sans: ['Poppins', 'sans-serif'],
             },
             colors: {
               primary: {
-                DEFAULT: '#7367f0', // Vuexy Purple
-                hover: '#685dd8',
-                light: '#8c82f3',
+                DEFAULT: '#FF6B35',
+                hover: '#E85A2A',
+                light: '#FF8C5F',
+                dark: '#CC5429',
               },
-              // Mapping "Dark" semantic names to Light Theme colors
-              dark: {
-                bg: '#F8F7FA',      // Light Gray Background
-                card: '#FFFFFF',    // White Card
-                text: '#5D596C',    // Dark Gray Text (Primary)
-                muted: '#A5A3AE',   // Light Gray Text (Secondary)
-                border: '#DBDADE'   // Light Border
+              secondary: {
+                DEFAULT: '#2D3047',
+                light: '#3D4063',
               },
-              success: '#28c76f',
-              danger: '#ea5455',
-              warning: '#ff9f43',
-              info: '#00cfe8',
+              accent: {
+                green: '#4CAF50',
+                blue: '#2196F3',
+                purple: '#9C27B0',
+              },
+              paw: {
+                orange: '#FF6B35',
+                cream: '#FFF8F0',
+                brown: '#8B4513',
+                gray: '#F5F5F5',
+              }
             },
             animation: {
-              'slide-in-right': 'slideInRight 0.3s ease-out forwards',
+              'bounce-slow': 'bounce 2s infinite',
+              'pulse-slow': 'pulse 3s infinite',
+              'slide-up': 'slideUp 0.5s ease-out forwards',
               'fade-in': 'fadeIn 0.5s ease-out forwards',
               'scale-up': 'scaleUp 0.3s ease-out forwards',
+              'wiggle': 'wiggle 1s ease-in-out infinite',
             },
             keyframes: {
-              slideInRight: {
-                '0%': { transform: 'translateX(100%)' },
-                '100%': { transform: 'translateX(0)' },
+              slideUp: {
+                '0%': { transform: 'translateY(20px)', opacity: '0' },
+                '100%': { transform: 'translateY(0)', opacity: '1' },
               },
               fadeIn: {
                 '0%': { opacity: '0' },
@@ -52,6 +60,10 @@
               scaleUp: {
                 '0%': { transform: 'scale(0.9)', opacity: '0' },
                 '100%': { transform: 'scale(1)', opacity: '1' },
+              },
+              wiggle: {
+                '0%, 100%': { transform: 'rotate(-3deg)' },
+                '50%': { transform: 'rotate(3deg)' },
               }
             }
           }
@@ -60,46 +72,50 @@
     </script>
     <style>
       body {
-        background-color: #F8F7FA;
-        color: #5D596C;
+        background-color: #FFF8F0;
+        color: #2D3047;
       }
-      /* Premium Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #F8F7FA; 
+        background: #FFF8F0;
       }
       ::-webkit-scrollbar-thumb {
-        background: #DBDADE; 
+        background: #FFB499;
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #7367f0; 
+        background: #FF6B35;
       }
       .glass-card {
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 107, 53, 0.1);
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #FF6B35 0%, #FF8C5F 100%);
+      }
+      .paw-pattern {
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FF6B35' fill-opacity='0.05'%3E%3Cpath d='M30 30c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10zm-20 0c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "vite": "https://aistudiocdn.com/vite@^7.2.2",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "path": "https://aistudiocdn.com/path@^0.12.7",
-    "url": "https://aistudiocdn.com/url@^0.11.4"
+    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
+    "react": "https://esm.sh/react@18.2.0",
+    "react/": "https://esm.sh/react@18.2.0/",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.22.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.344.0",
+    "qrcode.react": "https://esm.sh/qrcode.react@3.1.0"
   }
 }
 </script>
 </head>
   <body class="antialiased">
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

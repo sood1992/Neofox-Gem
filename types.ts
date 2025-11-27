@@ -1,158 +1,292 @@
+// PawTag India - Type Definitions
 
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  PROJECT_MANAGER = 'PROJECT_MANAGER',
-  EMPLOYEE = 'EMPLOYEE'
-}
+// Language Support
+export type Language = 'en' | 'hi';
 
-export enum Department {
-  PHOTOGRAPHY = 'Photography',
-  VIDEOGRAPHY = 'Videography',
-  VIDEO_EDITING = 'Video Editing',
-  STRATEGY = 'Creative Strategy',
-  MARKETING = 'Performance Marketing',
-  MANAGEMENT = 'Management'
-}
+// Pet Types
+export type PetType = 'dog' | 'cat' | 'bird' | 'rabbit' | 'other';
 
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  REVIEW = 'REVIEW',
-  CHANGES_REQUESTED = 'CHANGES_REQUESTED',
-  DONE = 'DONE',
-  LOCKED = 'LOCKED' // Dependent on other tasks
-}
+export type PetSize = 'small' | 'medium' | 'large';
 
-export enum Priority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT'
-}
+export type PetGender = 'male' | 'female' | 'unknown';
 
-export interface Badge {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  xpValue: number;
-}
+// Tag Status
+export type TagStatus = 'active' | 'inactive' | 'lost' | 'found';
 
+// Notification Types
+export type NotificationType = 'sms' | 'email' | 'whatsapp' | 'push';
+
+// User Interface
 export interface User {
   id: string;
-  name: string;
   email: string;
-  role: UserRole;
-  department: Department;
-  avatar: string;
-  hourlyRate: number;
-  skills: string[];
-  jobTitle?: string; // Added jobTitle
-  password?: string;
-  xp?: number;
-  level?: number;
-  badges?: string[]; // Badge IDs
-}
-
-export interface Client {
-  id: string;
+  phone: string;
+  password: string;
   name: string;
-  logo: string;
-  email: string;
-  totalRevenue: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  preferredLanguage: Language;
+  notificationPreferences: NotificationPreference;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface Asset {
+export interface NotificationPreference {
+  sms: boolean;
+  email: boolean;
+  whatsapp: boolean;
+  push: boolean;
+}
+
+// Pet Profile Interface
+export interface Pet {
   id: string;
-  projectId: string;
-  taskId?: string;
+  ownerId: string;
+  tagId: string;
+
+  // Basic Info
   name: string;
-  url: string;
-  type: 'IMAGE' | 'VIDEO' | 'DOCUMENT';
-  uploadedBy: string;
+  type: PetType;
+  breed: string;
+  gender: PetGender;
+  size: PetSize;
+  color: string;
+  dateOfBirth?: string;
+  age?: string;
+
+  // Photos
+  photoUrl?: string;
+  additionalPhotos?: string[];
+
+  // Medical Info
+  medicalInfo?: MedicalInfo;
+
+  // Microchip
+  microchipId?: string;
+
+  // Personality & Special Notes
+  personality?: string;
+  specialNeeds?: string;
+
+  // Emergency Contacts
+  emergencyContacts: EmergencyContact[];
+
+  // Vet Details
+  vetInfo?: VetInfo;
+
+  // Status
+  status: TagStatus;
+  isLost: boolean;
+  lostDate?: string;
+  lostLocation?: string;
+
+  // Reward (if lost)
+  rewardAmount?: number;
+
+  // Multi-language descriptions
+  descriptionEn?: string;
+  descriptionHi?: string;
+
   createdAt: string;
-  version: number;
+  updatedAt: string;
 }
 
-export interface Comment {
-  id: string;
-  userId: string;
-  text: string;
-  createdAt: string;
-  type?: 'GENERAL' | 'FEEDBACK' | 'APPROVAL';
+export interface MedicalInfo {
+  allergies?: string[];
+  medications?: string[];
+  conditions?: string[];
+  vaccinations?: Vaccination[];
+  bloodType?: string;
+  spayedNeutered?: boolean;
+  lastVetVisit?: string;
+  notes?: string;
 }
 
-export interface SubTask {
-  id: string;
-  title: string;
-  isCompleted: boolean;
-}
-
-export interface TimeEntry {
-  id: string;
-  taskId: string;
-  userId: string;
-  startTime: string;
-  endTime: string | null;
-  durationSeconds: number;
-  description?: string;
-  isBillable: boolean;
-}
-
-export interface Expense {
-  id: string;
-  projectId: string;
-  description: string;
-  amount: number;
-  category: 'Talent' | 'Location' | 'Equipment' | 'Software' | 'Other';
+export interface Vaccination {
+  name: string;
   date: string;
+  nextDueDate?: string;
 }
 
-export interface Project {
+export interface EmergencyContact {
   id: string;
-  clientId: string;
-  title: string;
-  jobCode?: string;
-  description: string;
-  managerId: string;
-  deadline: string;
-  status: 'ACTIVE' | 'COMPLETED' | 'ON_HOLD' | 'PLANNING';
-  budget: number;
-  expenses: number; // Calculated from Expense entries
-  tags: string[];
+  name: string;
+  phone: string;
+  relationship: string;
+  isPrimary: boolean;
 }
 
-export interface Task {
+export interface VetInfo {
+  name: string;
+  clinicName: string;
+  phone: string;
+  address?: string;
+  email?: string;
+}
+
+// Tag Interface
+export interface Tag {
   id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  status: TaskStatus;
-  priority: Priority;
-  assigneeId: string;
-  reporterId: string;
-  department: Department;
-  dueDate: string;
+  code: string;
+  petId?: string;
+  ownerId?: string;
+  isActivated: boolean;
+  activatedAt?: string;
   createdAt: string;
-  completedDate?: string;
-  subtasks: SubTask[];
-  tags: string[];
-  timeSpentSeconds: number;
-  estimatedSeconds: number;
-  dependencies: string[]; // IDs of tasks that must be completed before this one
-  comments: Comment[];
-  assets: Asset[];
+  tagType: 'basic' | 'premium' | 'nfc';
 }
 
-export interface ShootEvent {
+// Scan Event Interface
+export interface ScanEvent {
   id: string;
-  projectId: string;
-  title: string;
-  start: string;
-  end: string;
-  allDay?: boolean;
-  location?: string;
-  crewIds: string[];
-  type: 'SHOOT' | 'MEETING' | 'RECCE' | 'TRAVEL';
-  description?: string;
+  tagId: string;
+  petId: string;
+  scannedAt: string;
+
+  // Finder Info (optional)
+  finderName?: string;
+  finderPhone?: string;
+  finderEmail?: string;
+  finderMessage?: string;
+
+  // Location Data
+  location?: GeoLocation;
+  locationPermissionGranted: boolean;
+
+  // Device Info
+  userAgent?: string;
+  ipAddress?: string;
+
+  // Notification sent status
+  notificationsSent: NotificationType[];
+}
+
+export interface GeoLocation {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+}
+
+// Notification Log
+export interface NotificationLog {
+  id: string;
+  userId: string;
+  petId: string;
+  scanId: string;
+  type: NotificationType;
+  status: 'pending' | 'sent' | 'delivered' | 'failed';
+  message: string;
+  sentAt: string;
+  deliveredAt?: string;
+  errorMessage?: string;
+}
+
+// Order (for e-commerce - future)
+export interface Order {
+  id: string;
+  userId: string;
+  tagIds: string[];
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: Address;
+  amount: number;
+  paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentMethod?: string;
+  trackingNumber?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Address {
+  name: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+}
+
+// Form Data Types
+export interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+export interface RegisterFormData {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  preferredLanguage: Language;
+}
+
+export interface PetFormData {
+  name: string;
+  type: PetType;
+  breed: string;
+  gender: PetGender;
+  size: PetSize;
+  color: string;
+  dateOfBirth?: string;
+  photoUrl?: string;
+  microchipId?: string;
+  personality?: string;
+  specialNeeds?: string;
+  descriptionEn?: string;
+  descriptionHi?: string;
+}
+
+export interface ContactFinderFormData {
+  name: string;
+  phone: string;
+  email?: string;
+  message?: string;
+  allowCallback: boolean;
+}
+
+// Dashboard Statistics
+export interface DashboardStats {
+  totalPets: number;
+  activeTags: number;
+  totalScans: number;
+  scansThisMonth: number;
+  lostPets: number;
+  foundPets: number;
+}
+
+// Toast Notification
+export interface Toast {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration?: number;
+}
+
+// Auth Context
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (data: RegisterFormData) => Promise<boolean>;
+  logout: () => void;
+  updateUser: (data: Partial<User>) => void;
+}
+
+// App Context
+export interface AppContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+  toasts: Toast[];
+  addToast: (message: string, type: Toast['type']) => void;
+  removeToast: (id: string) => void;
 }

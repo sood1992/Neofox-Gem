@@ -1,5 +1,5 @@
 {
-  "name": "foxhole-enterprise",
+  "name": "pawtag-india",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -12,8 +12,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
-    "@google/genai": "^0.1.1",
-    "lucide-react": "^0.344.0"
+    "lucide-react": "^0.344.0",
+    "qrcode.react": "^3.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
