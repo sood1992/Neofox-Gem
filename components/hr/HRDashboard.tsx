@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users, Briefcase, TrendingUp, Clock, AlertTriangle, CheckCircle, XCircle,
   Upload, Filter, BarChart3, UserCheck, ArrowUpRight, ArrowDownRight,
-  Star, Eye, GitCompare, Download, Settings, Plus, Search, RefreshCw
+  Star, Eye, GitCompare, Download, Settings, Plus, Search, RefreshCw, Info, X
 } from 'lucide-react';
 import { HRStorageService } from '../../services/hrStorageService';
 import {
@@ -47,6 +47,20 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
   });
 
   const [isLoading, setIsLoading] = useState(true);
+  const [showApiNotice, setShowApiNotice] = useState(!process.env.API_KEY);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  // Toast auto-dismiss
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+  };
 
   // Initialize demo data and load positions
   useEffect(() => {
@@ -157,6 +171,26 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
 
   return (
     <div className="animate-fade-in">
+      {/* API Configuration Notice */}
+      {showApiNotice && (
+        <div className="mb-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-3">
+          <Info className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h4 className="font-semibold text-amber-500">AI Features Limited</h4>
+            <p className="text-sm text-dark-muted mt-1">
+              To enable AI-powered resume parsing and analysis, configure your Google Gemini API key in the environment variables (API_KEY).
+              The tool will work with basic functionality without the API key.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowApiNotice(false)}
+            className="p-1 hover:bg-amber-500/20 rounded transition-colors"
+          >
+            <X className="w-4 h-4 text-amber-500" />
+          </button>
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -420,6 +454,7 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
           onUploadComplete={() => {
             setActiveModal(null);
             loadCandidates();
+            showToast('Candidates uploaded successfully', 'success');
           }}
         />
       )}
@@ -432,6 +467,7 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
             refreshData();
             setSelectedPositionId(position.id);
             setActiveModal(null);
+            showToast('Position created successfully', 'success');
           }}
         />
       )}
@@ -443,6 +479,7 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
           onSave={() => {
             setActiveModal(null);
             loadCandidates();
+            showToast('Scoring criteria saved', 'success');
           }}
         />
       )}
@@ -464,6 +501,23 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
             setSelectedForComparison([]);
           }}
         />
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-slide-in-right z-50 border ${
+          toast.type === 'success' ? 'bg-dark-card border-green-500/30 text-green-500' :
+          toast.type === 'error' ? 'bg-dark-card border-red-500/30 text-red-500' :
+          'bg-dark-card border-primary/30 text-primary'
+        }`}>
+          {toast.type === 'success' && <CheckCircle className="w-5 h-5" />}
+          {toast.type === 'error' && <XCircle className="w-5 h-5" />}
+          {toast.type === 'info' && <Info className="w-5 h-5" />}
+          <span className="font-medium">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-70">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       )}
     </div>
   );

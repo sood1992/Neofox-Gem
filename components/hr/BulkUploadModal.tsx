@@ -27,6 +27,15 @@ interface UploadedFile {
   candidateId?: string;
 }
 
+// File size limit: 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain'
+];
+
 export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
   position,
   onClose,
@@ -62,12 +71,36 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
   };
 
   const addFiles = (files: File[]) => {
-    const newFiles: UploadedFile[] = files.map(file => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      file,
-      status: 'pending',
-      progress: 0
-    }));
+    const newFiles: UploadedFile[] = files.map(file => {
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        return {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file,
+          status: 'error' as const,
+          progress: 0,
+          error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`
+        };
+      }
+
+      // Validate file type
+      if (!ALLOWED_TYPES.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|txt)$/i)) {
+        return {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          file,
+          status: 'error' as const,
+          progress: 0,
+          error: 'Unsupported file type'
+        };
+      }
+
+      return {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        file,
+        status: 'pending' as const,
+        progress: 0
+      };
+    });
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
