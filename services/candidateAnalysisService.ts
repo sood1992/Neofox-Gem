@@ -1,6 +1,6 @@
-// Candidate Analysis Service - AI-powered resume parsing and analysis
+// Candidate Analysis Service - AI-powered resume parsing and analysis using Claude
 
-import { GoogleGenAI, Type } from "@google/genai";
+import Anthropic from '@anthropic-ai/sdk';
 import {
   Candidate,
   JobPosition,
@@ -22,28 +22,50 @@ import {
   RequirementMatch
 } from '../hrTypes';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Initialize Anthropic client - uses ANTHROPIC_API_KEY env var by default
+const getClient = () => {
+  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.API_KEY;
+  if (!apiKey) return null;
+  return new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+};
 
 // Helper to generate unique IDs
 const generateId = (): string => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+// Helper to extract JSON from Claude's response
+const extractJSON = (text: string): any => {
+  // Try to find JSON in the response
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    return JSON.parse(jsonMatch[0]);
+  }
+  return JSON.parse(text);
+};
 
 export const CandidateAnalysisService = {
   /**
    * Parse resume text and extract structured data
    */
   parseResume: async (resumeText: string): Promise<ParsedResumeData | null> => {
-    if (!process.env.API_KEY) {
+    const client = getClient();
+    if (!client) {
       console.warn('API key not configured, using mock parser');
       return CandidateAnalysisService.mockParseResume(resumeText);
     }
 
     try {
-      const prompt = `You are an expert resume parser. Analyze the following resume and extract all relevant information into a structured format.
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [
+          {
+            role: 'user',
+            content: `You are an expert resume parser. Analyze the following resume and extract all relevant information into a structured JSON format.
 
 RESUME TEXT:
 ${resumeText}
 
-Extract and return a JSON object with this structure:
+Extract and return ONLY a valid JSON object (no markdown, no explanation) with this structure:
 {
   "name": "Full name of the candidate",
   "email": "Email address",
@@ -110,20 +132,15 @@ Extract and return a JSON object with this structure:
   "awards": ["Award 1", "Award 2"]
 }
 
-Be thorough and extract ALL information. If something is not present, use null or empty array.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json"
-        }
+Be thorough and extract ALL information. If something is not present, use null or empty array. Return ONLY the JSON.`
+          }
+        ]
       });
 
-      const jsonStr = response.text;
-      if (!jsonStr) return null;
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      if (!responseText) return null;
 
-      const parsed = JSON.parse(jsonStr);
+      const parsed = extractJSON(responseText);
 
       // Add IDs and format dates
       const result: ParsedResumeData = {
@@ -215,7 +232,8 @@ Be thorough and extract ALL information. If something is not present, use null o
    * Analyze candidate against job position requirements
    */
   analyzeCandidate: async (candidate: Candidate, position: JobPosition): Promise<CandidateAnalysis | null> => {
-    if (!process.env.API_KEY) {
+    const client = getClient();
+    if (!client) {
       console.warn('API key not configured, using basic analysis');
       return CandidateAnalysisService.basicAnalysis(candidate, position);
     }
@@ -246,7 +264,13 @@ Be thorough and extract ALL information. If something is not present, use null o
         location: position.location
       }, null, 2);
 
-      const prompt = `You are an expert HR analyst and talent acquisition specialist. Perform a comprehensive analysis of this candidate for the given job position.
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8192,
+        messages: [
+          {
+            role: 'user',
+            content: `You are an expert HR analyst and talent acquisition specialist. Perform a comprehensive analysis of this candidate for the given job position.
 
 CANDIDATE PROFILE:
 ${candidateProfile}
@@ -254,7 +278,7 @@ ${candidateProfile}
 JOB REQUIREMENTS:
 ${jobRequirements}
 
-Provide a detailed analysis in JSON format with these sections:
+Provide a detailed analysis as ONLY a valid JSON object (no markdown, no explanation) with these sections:
 
 {
   "overallFitScore": 0-100,
@@ -349,20 +373,15 @@ Provide a detailed analysis in JSON format with these sections:
   "recommendations": ["recommendation 1", "recommendation 2"]
 }
 
-Be thorough, objective, and provide actionable insights. Consider both explicit information and implicit signals.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json"
-        }
+Be thorough, objective, and provide actionable insights. Return ONLY the JSON.`
+          }
+        ]
       });
 
-      const jsonStr = response.text;
-      if (!jsonStr) return null;
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      if (!responseText) return null;
 
-      const analysis = JSON.parse(jsonStr);
+      const analysis = extractJSON(responseText);
 
       return {
         analyzedAt: new Date().toISOString(),
@@ -593,7 +612,8 @@ Be thorough, objective, and provide actionable insights. Consider both explicit 
    * Compare multiple candidates
    */
   compareCandidates: async (candidates: Candidate[], position: JobPosition): Promise<string> => {
-    if (!process.env.API_KEY) {
+    const client = getClient();
+    if (!client) {
       return CandidateAnalysisService.basicComparison(candidates);
     }
 
@@ -610,7 +630,13 @@ Be thorough, objective, and provide actionable insights. Consider both explicit 
         salary: c.salaryExpectation
       }));
 
-      const prompt = `Compare these candidates for the ${position.title} role and provide a detailed comparison summary:
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2048,
+        messages: [
+          {
+            role: 'user',
+            content: `Compare these candidates for the ${position.title} role and provide a detailed comparison summary:
 
 CANDIDATES:
 ${JSON.stringify(candidatesSummary, null, 2)}
@@ -626,14 +652,13 @@ Provide a comparison that:
 3. Notes trade-offs between candidates
 4. Provides a clear recommendation
 
-Format as a professional summary.`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt
+Format as a professional summary (plain text, no JSON).`
+          }
+        ]
       });
 
-      return response.text || CandidateAnalysisService.basicComparison(candidates);
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      return responseText || CandidateAnalysisService.basicComparison(candidates);
     } catch (error) {
       console.error("Comparison error:", error);
       return CandidateAnalysisService.basicComparison(candidates);
@@ -665,12 +690,19 @@ Format as a professional summary.`;
    * Generate interview questions tailored to candidate
    */
   generateInterviewQuestions: async (candidate: Candidate, position: JobPosition, count: number = 10): Promise<InterviewQuestion[]> => {
-    if (!process.env.API_KEY) {
+    const client = getClient();
+    if (!client) {
       return CandidateAnalysisService.defaultInterviewQuestions(candidate);
     }
 
     try {
-      const prompt = `Generate ${count} targeted interview questions for this candidate applying for ${position.title}.
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        messages: [
+          {
+            role: 'user',
+            content: `Generate ${count} targeted interview questions for this candidate applying for ${position.title}.
 
 CANDIDATE:
 - Name: ${candidate.firstName} ${candidate.lastName}
@@ -690,7 +722,7 @@ Generate questions that:
 4. Evaluate problem-solving abilities
 5. Uncover motivation and career goals
 
-Return as JSON array:
+Return ONLY a valid JSON array (no markdown, no explanation):
 [
   {
     "question": "The interview question",
@@ -699,20 +731,16 @@ Return as JSON array:
     "priority": "HIGH|MEDIUM|LOW",
     "relatedTo": "What gap, red flag, or skill this addresses"
   }
-]`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json"
-        }
+]`
+          }
+        ]
       });
 
-      const jsonStr = response.text;
-      if (!jsonStr) return CandidateAnalysisService.defaultInterviewQuestions(candidate);
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      if (!responseText) return CandidateAnalysisService.defaultInterviewQuestions(candidate);
 
-      return JSON.parse(jsonStr) as InterviewQuestion[];
+      const questions = extractJSON(responseText);
+      return Array.isArray(questions) ? questions : CandidateAnalysisService.defaultInterviewQuestions(candidate);
     } catch (error) {
       console.error("Question generation error:", error);
       return CandidateAnalysisService.defaultInterviewQuestions(candidate);
@@ -784,41 +812,47 @@ Return as JSON array:
    * Generate executive summary for a candidate
    */
   generateExecutiveSummary: async (candidate: Candidate, position: JobPosition): Promise<string> => {
-    if (!process.env.API_KEY) {
+    const client = getClient();
+    if (!client) {
       return `${candidate.firstName} ${candidate.lastName} is a ${candidate.experienceLevel.toLowerCase()} ${candidate.currentTitle} with ${candidate.totalYearsExperience} years of experience. They scored ${candidate.overallScore}/100 overall, with ${candidate.skillMatchScore}/100 in skill match. ${candidate.aiRecommendation ? `AI recommendation: ${candidate.aiRecommendation.replace('_', ' ').toLowerCase()}.` : ''}`;
     }
 
     try {
-      const prompt = `Write a concise 2-paragraph executive summary for this candidate applying for ${position.title}:
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: `Write a concise 2-paragraph executive summary for this candidate applying for ${position.title}:
 
 CANDIDATE:
 ${JSON.stringify({
-          name: `${candidate.firstName} ${candidate.lastName}`,
-          currentRole: candidate.currentTitle,
-          company: candidate.currentCompany,
-          experience: candidate.totalYearsExperience,
-          scores: {
-            overall: candidate.overallScore,
-            skills: candidate.skillMatchScore,
-            experience: candidate.experienceScore,
-            cultural: candidate.culturalFitScore
-          },
-          strengths: candidate.strengths?.map(s => s.title) || [],
-          concerns: candidate.redFlags?.map(r => r.title) || []
-        }, null, 2)}
+              name: `${candidate.firstName} ${candidate.lastName}`,
+              currentRole: candidate.currentTitle,
+              company: candidate.currentCompany,
+              experience: candidate.totalYearsExperience,
+              scores: {
+                overall: candidate.overallScore,
+                skills: candidate.skillMatchScore,
+                experience: candidate.experienceScore,
+                cultural: candidate.culturalFitScore
+              },
+              strengths: candidate.strengths?.map(s => s.title) || [],
+              concerns: candidate.redFlags?.map(r => r.title) || []
+            }, null, 2)}
 
 The summary should:
 1. Start with overall recommendation (hire/maybe/pass)
 2. Highlight key qualifications and fit
 3. Note any concerns
-4. Be professional and actionable`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt
+4. Be professional and actionable`
+          }
+        ]
       });
 
-      return response.text || '';
+      const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+      return responseText || '';
     } catch (error) {
       console.error("Summary generation error:", error);
       return '';

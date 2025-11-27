@@ -47,7 +47,7 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
   });
 
   const [isLoading, setIsLoading] = useState(true);
-  const [showApiNotice, setShowApiNotice] = useState(!process.env.API_KEY);
+  const [showApiNotice, setShowApiNotice] = useState(!process.env.ANTHROPIC_API_KEY && !process.env.API_KEY);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Toast auto-dismiss
@@ -178,7 +178,7 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
           <div className="flex-1">
             <h4 className="font-semibold text-amber-500">AI Features Limited</h4>
             <p className="text-sm text-dark-muted mt-1">
-              To enable AI-powered resume parsing and analysis, configure your Google Gemini API key in the environment variables (API_KEY).
+              To enable AI-powered resume parsing and analysis, configure your Anthropic API key in the environment variables (ANTHROPIC_API_KEY).
               The tool will work with basic functionality without the API key.
             </p>
           </div>
