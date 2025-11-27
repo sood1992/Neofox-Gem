@@ -290,3 +290,366 @@ export interface AppContextType {
   addToast: (message: string, type: Toast['type']) => void;
   removeToast: (id: string) => void;
 }
+
+// ==================== NEW FEATURES ====================
+
+// Pet Health Passport
+export interface HealthPassport {
+  id: string;
+  petId: string;
+
+  // Vaccination Records
+  vaccinations: VaccinationRecord[];
+
+  // Deworming Records
+  dewormingRecords: DewormingRecord[];
+
+  // Health Checkups
+  checkups: HealthCheckup[];
+
+  // Weight History
+  weightHistory: WeightRecord[];
+
+  // Documents
+  documents: HealthDocument[];
+
+  // Reminders
+  reminders: HealthReminder[];
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VaccinationRecord {
+  id: string;
+  name: string;
+  date: string;
+  nextDueDate?: string;
+  batchNumber?: string;
+  administeredBy?: string;
+  clinicName?: string;
+  notes?: string;
+  documentUrl?: string;
+}
+
+export interface DewormingRecord {
+  id: string;
+  medicineName: string;
+  date: string;
+  nextDueDate?: string;
+  dosage?: string;
+  administeredBy?: string;
+  notes?: string;
+}
+
+export interface HealthCheckup {
+  id: string;
+  date: string;
+  vetName: string;
+  clinicName: string;
+  reason: 'routine' | 'illness' | 'injury' | 'follow-up' | 'other';
+  diagnosis?: string;
+  treatment?: string;
+  prescriptions?: string[];
+  followUpDate?: string;
+  cost?: number;
+  notes?: string;
+  documentUrl?: string;
+}
+
+export interface WeightRecord {
+  id: string;
+  date: string;
+  weight: number;
+  unit: 'kg' | 'lbs';
+  notes?: string;
+}
+
+export interface HealthDocument {
+  id: string;
+  name: string;
+  type: 'vaccination' | 'prescription' | 'report' | 'certificate' | 'other';
+  url: string;
+  uploadedAt: string;
+  notes?: string;
+}
+
+export interface HealthReminder {
+  id: string;
+  title: string;
+  type: 'vaccination' | 'deworming' | 'checkup' | 'medication' | 'grooming' | 'other';
+  dueDate: string;
+  isCompleted: boolean;
+  completedAt?: string;
+  notes?: string;
+  notifyBefore: number; // days before due date
+}
+
+// Finder Rewards System
+export interface FinderProfile {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  city?: string;
+
+  // Rewards
+  totalPoints: number;
+  level: number;
+  badges: FinderBadge[];
+
+  // Stats
+  petsHelped: number;
+  scansCount: number;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinderBadge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earnedAt: string;
+  category: 'helper' | 'hero' | 'legend' | 'special';
+}
+
+export interface RewardTransaction {
+  id: string;
+  finderId: string;
+  scanId: string;
+  petId: string;
+  points: number;
+  type: 'scan' | 'reunion' | 'bonus' | 'referral';
+  description: string;
+  createdAt: string;
+}
+
+export const FINDER_BADGES: Omit<FinderBadge, 'id' | 'earnedAt'>[] = [
+  { name: 'First Helper', description: 'Scanned your first PawTag', icon: '🌟', category: 'helper' },
+  { name: 'Good Samaritan', description: 'Helped reunite 3 pets', icon: '💫', category: 'helper' },
+  { name: 'Pet Hero', description: 'Helped reunite 10 pets', icon: '🦸', category: 'hero' },
+  { name: 'Guardian Angel', description: 'Helped reunite 25 pets', icon: '👼', category: 'hero' },
+  { name: 'Legend', description: 'Helped reunite 50 pets', icon: '🏆', category: 'legend' },
+  { name: 'Night Owl', description: 'Scanned a tag after midnight', icon: '🦉', category: 'special' },
+  { name: 'Quick Responder', description: 'Left contact info within 1 minute', icon: '⚡', category: 'special' },
+  { name: 'Detailed Helper', description: 'Left a helpful message for owner', icon: '📝', category: 'special' },
+];
+
+export const FINDER_LEVELS = [
+  { level: 1, name: 'Newcomer', minPoints: 0, maxPoints: 99 },
+  { level: 2, name: 'Helper', minPoints: 100, maxPoints: 299 },
+  { level: 3, name: 'Friend', minPoints: 300, maxPoints: 599 },
+  { level: 4, name: 'Hero', minPoints: 600, maxPoints: 999 },
+  { level: 5, name: 'Champion', minPoints: 1000, maxPoints: 1999 },
+  { level: 6, name: 'Legend', minPoints: 2000, maxPoints: Infinity },
+];
+
+// Insurance Integration
+export interface PetInsurance {
+  id: string;
+  petId: string;
+  ownerId: string;
+
+  // Provider Info
+  providerName: string;
+  providerLogo?: string;
+  policyNumber: string;
+
+  // Coverage
+  coverageType: 'basic' | 'standard' | 'premium' | 'comprehensive';
+  coverageAmount: number;
+  deductible: number;
+
+  // Dates
+  startDate: string;
+  endDate: string;
+  renewalDate?: string;
+
+  // Coverage Details
+  coverageDetails: InsuranceCoverage[];
+
+  // Claims
+  claims: InsuranceClaim[];
+
+  // Contact
+  emergencyHotline?: string;
+  claimEmail?: string;
+
+  // Documents
+  policyDocumentUrl?: string;
+
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InsuranceCoverage {
+  type: 'accident' | 'illness' | 'surgery' | 'hospitalization' | 'medication' | 'preventive' | 'theft' | 'death';
+  covered: boolean;
+  limit?: number;
+  notes?: string;
+}
+
+export interface InsuranceClaim {
+  id: string;
+  date: string;
+  type: string;
+  amount: number;
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  description: string;
+  documents?: string[];
+  notes?: string;
+  processedAt?: string;
+}
+
+export interface InsuranceProvider {
+  id: string;
+  name: string;
+  logo: string;
+  description: string;
+  website: string;
+  phone: string;
+  email: string;
+  plans: InsurancePlan[];
+  rating: number;
+  reviewCount: number;
+}
+
+export interface InsurancePlan {
+  id: string;
+  name: string;
+  type: 'basic' | 'standard' | 'premium' | 'comprehensive';
+  monthlyPremium: number;
+  annualPremium: number;
+  coverageAmount: number;
+  deductible: number;
+  features: string[];
+  exclusions: string[];
+}
+
+// NGO / Shelter Network
+export interface NGO {
+  id: string;
+  name: string;
+  type: 'shelter' | 'rescue' | 'hospital' | 'ngo' | 'adoption';
+  logo?: string;
+
+  // Contact
+  phone: string;
+  email?: string;
+  website?: string;
+  whatsapp?: string;
+
+  // Location
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  location?: GeoLocation;
+
+  // Details
+  description: string;
+  services: NGOService[];
+  operatingHours?: string;
+
+  // Verification
+  isVerified: boolean;
+  registrationNumber?: string;
+
+  // Stats
+  petsRescued?: number;
+  petsAdopted?: number;
+
+  // Social
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+  };
+
+  // Photos
+  photos?: string[];
+
+  // Rating
+  rating: number;
+  reviewCount: number;
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NGOService =
+  | 'rescue'
+  | 'shelter'
+  | 'adoption'
+  | 'medical'
+  | 'vaccination'
+  | 'sterilization'
+  | 'foster'
+  | 'burial'
+  | 'ambulance'
+  | 'lost-found'
+  | 'training'
+  | 'grooming';
+
+export interface NGOReview {
+  id: string;
+  ngoId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+// Lost Pet Alert Network
+export interface LostPetAlert {
+  id: string;
+  petId: string;
+  ownerId: string;
+
+  // Alert Details
+  title: string;
+  description: string;
+  lastSeenLocation: GeoLocation;
+  lastSeenDate: string;
+
+  // Search Radius
+  alertRadius: number; // in km
+
+  // Status
+  status: 'active' | 'found' | 'cancelled';
+
+  // Reward
+  rewardAmount?: number;
+
+  // Responses
+  sightings: PetSighting[];
+
+  // Reach
+  alertsSent: number;
+  viewCount: number;
+
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string;
+}
+
+export interface PetSighting {
+  id: string;
+  alertId: string;
+  reporterId: string;
+  reporterName: string;
+  reporterPhone: string;
+
+  location: GeoLocation;
+  sightingTime: string;
+  description: string;
+  photoUrl?: string;
+
+  isVerified: boolean;
+
+  createdAt: string;
+}

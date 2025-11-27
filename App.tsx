@@ -4,7 +4,9 @@ import {
   Dog, Cat, Bird, Rabbit, PawPrint, QrCode, Bell, MapPin, Phone, Mail,
   MessageCircle, Shield, Zap, Heart, ChevronRight, Menu, X, User as UserIcon,
   LogOut, Settings, Plus, Edit, Trash2, Clock, AlertTriangle, CheckCircle,
-  Camera, Share2, ExternalLink, Globe, Home, History, Tag
+  Camera, Share2, ExternalLink, Globe, Home, History, Tag, FileText, Award,
+  Building2, Star, Search, Filter, Syringe, Weight, Calendar, FileCheck,
+  TrendingUp, Trophy, BadgeCheck, Stethoscope, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { StorageService } from './services/storageService';
 import { NotificationService } from './services/notificationService';
@@ -12,7 +14,11 @@ import { GeolocationService } from './services/geolocationService';
 import { LanguageService, t } from './services/languageService';
 import {
   User, Pet, Tag as TagType, ScanEvent, GeoLocation, Language,
-  RegisterFormData, Toast, PetType, PetGender, PetSize, EmergencyContact
+  RegisterFormData, Toast, PetType, PetGender, PetSize, EmergencyContact,
+  HealthPassport, VaccinationRecord, DewormingRecord, HealthCheckup, WeightRecord, HealthReminder,
+  FinderProfile, FINDER_LEVELS, FINDER_BADGES,
+  InsuranceProvider, InsurancePlan, PetInsurance,
+  NGO, NGOService
 } from './types';
 
 // Initialize storage
@@ -647,6 +653,9 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: PawPrint, label: 'My Pets', path: '/dashboard/pets' },
     { icon: History, label: 'Scan History', path: '/dashboard/scans' },
+    { icon: FileText, label: 'Health Passport', path: '/dashboard/health' },
+    { icon: Shield, label: 'Insurance', path: '/dashboard/insurance' },
+    { icon: Building2, label: 'NGO Directory', path: '/dashboard/ngos' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' }
   ];
 
@@ -1734,6 +1743,792 @@ const SettingsPage: React.FC = () => {
   );
 };
 
+// ==================== HEALTH PASSPORT PAGE ====================
+
+const HealthPassportPage: React.FC = () => {
+  const { user } = useAuth();
+  const { addToast } = useApp();
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [selectedPetId, setSelectedPetId] = useState<string>('');
+  const [passport, setPassport] = useState<HealthPassport | null>(null);
+  const [activeTab, setActiveTab] = useState<'vaccinations' | 'deworming' | 'checkups' | 'weight' | 'reminders'>('vaccinations');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>('vaccinations');
+
+  useEffect(() => {
+    if (user) {
+      const userPets = StorageService.getPetsByOwnerId(user.id);
+      setPets(userPets);
+      if (userPets.length > 0 && !selectedPetId) {
+        setSelectedPetId(userPets[0].id);
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (selectedPetId) {
+      const hp = StorageService.getHealthPassportByPetId(selectedPetId);
+      setPassport(hp || null);
+    }
+  }, [selectedPetId]);
+
+  const selectedPet = pets.find(p => p.id === selectedPetId);
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const isOverdue = (dateStr: string) => {
+    return new Date(dateStr) < new Date();
+  };
+
+  const isDueSoon = (dateStr: string, days: number = 7) => {
+    const dueDate = new Date(dateStr);
+    const now = new Date();
+    const diffTime = dueDate.getTime() - now.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    return diffDays > 0 && diffDays <= days;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-secondary flex items-center gap-3">
+            <FileText className="text-primary" />
+            Pet Health Passport
+          </h1>
+          <p className="text-gray-600 mt-1">Track vaccinations, checkups, and health records</p>
+        </div>
+      </div>
+
+      {pets.length === 0 ? (
+        <div className="bg-white rounded-xl p-8 text-center">
+          <PawPrint size={48} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="font-semibold text-secondary mb-2">No Pets Yet</h3>
+          <p className="text-gray-500 mb-4">Add your first pet to start tracking health records</p>
+          <Link to="/dashboard/pets" className="text-primary font-medium hover:underline">
+            Go to My Pets
+          </Link>
+        </div>
+      ) : (
+        <>
+          {/* Pet Selector */}
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Pet</label>
+            <div className="flex flex-wrap gap-3">
+              {pets.map(pet => (
+                <button
+                  key={pet.id}
+                  onClick={() => setSelectedPetId(pet.id)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
+                    selectedPetId === pet.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-gray-200 hover:border-primary/50'
+                  }`}
+                >
+                  <img
+                    src={pet.photoUrl || 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100'}
+                    alt={pet.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                  <div className="text-left">
+                    <p className="font-medium text-secondary">{pet.name}</p>
+                    <p className="text-xs text-gray-500 capitalize">{pet.type}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Health Records */}
+          {selectedPet && (
+            <div className="space-y-4">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Syringe size={20} className="text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-secondary">{passport?.vaccinations.length || 0}</p>
+                      <p className="text-xs text-gray-500">Vaccinations</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Stethoscope size={20} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-secondary">{passport?.checkups.length || 0}</p>
+                      <p className="text-xs text-gray-500">Checkups</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Weight size={20} className="text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-secondary">
+                        {passport?.weightHistory.length ? `${passport.weightHistory[passport.weightHistory.length - 1].weight} kg` : '-'}
+                      </p>
+                      <p className="text-xs text-gray-500">Current Weight</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl p-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <Bell size={20} className="text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-secondary">
+                        {passport?.reminders.filter(r => !r.isCompleted).length || 0}
+                      </p>
+                      <p className="text-xs text-gray-500">Pending Reminders</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vaccinations Section */}
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setExpandedSection(expandedSection === 'vaccinations' ? null : 'vaccinations')}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <Syringe className="text-green-600" size={24} />
+                    <span className="font-semibold text-secondary">Vaccinations</span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                      {passport?.vaccinations.length || 0} records
+                    </span>
+                  </div>
+                  {expandedSection === 'vaccinations' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedSection === 'vaccinations' && (
+                  <div className="border-t p-4">
+                    {passport?.vaccinations.length ? (
+                      <div className="space-y-3">
+                        {passport.vaccinations.map(vac => (
+                          <div key={vac.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <p className="font-medium text-secondary">{vac.name}</p>
+                              <p className="text-sm text-gray-500">
+                                Given: {formatDate(vac.date)}
+                                {vac.administeredBy && ` by ${vac.administeredBy}`}
+                              </p>
+                            </div>
+                            {vac.nextDueDate && (
+                              <div className={`text-right ${
+                                isOverdue(vac.nextDueDate) ? 'text-red-600' :
+                                isDueSoon(vac.nextDueDate) ? 'text-orange-600' : 'text-green-600'
+                              }`}>
+                                <p className="text-xs">Next Due</p>
+                                <p className="font-medium">{formatDate(vac.nextDueDate)}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No vaccination records yet</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Deworming Section */}
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setExpandedSection(expandedSection === 'deworming' ? null : 'deworming')}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileCheck className="text-blue-600" size={24} />
+                    <span className="font-semibold text-secondary">Deworming</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                      {passport?.dewormingRecords.length || 0} records
+                    </span>
+                  </div>
+                  {expandedSection === 'deworming' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedSection === 'deworming' && (
+                  <div className="border-t p-4">
+                    {passport?.dewormingRecords.length ? (
+                      <div className="space-y-3">
+                        {passport.dewormingRecords.map(rec => (
+                          <div key={rec.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <p className="font-medium text-secondary">{rec.medicineName}</p>
+                              <p className="text-sm text-gray-500">
+                                {formatDate(rec.date)} {rec.dosage && `• ${rec.dosage}`}
+                              </p>
+                            </div>
+                            {rec.nextDueDate && (
+                              <div className={`text-right ${
+                                isOverdue(rec.nextDueDate) ? 'text-red-600' :
+                                isDueSoon(rec.nextDueDate) ? 'text-orange-600' : 'text-green-600'
+                              }`}>
+                                <p className="text-xs">Next Due</p>
+                                <p className="font-medium">{formatDate(rec.nextDueDate)}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No deworming records yet</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Checkups Section */}
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setExpandedSection(expandedSection === 'checkups' ? null : 'checkups')}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <Stethoscope className="text-purple-600" size={24} />
+                    <span className="font-semibold text-secondary">Health Checkups</span>
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                      {passport?.checkups.length || 0} visits
+                    </span>
+                  </div>
+                  {expandedSection === 'checkups' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedSection === 'checkups' && (
+                  <div className="border-t p-4">
+                    {passport?.checkups.length ? (
+                      <div className="space-y-3">
+                        {passport.checkups.map(chk => (
+                          <div key={chk.id} className="p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="font-medium text-secondary">{formatDate(chk.date)}</p>
+                              <span className={`text-xs px-2 py-1 rounded-full capitalize ${
+                                chk.reason === 'routine' ? 'bg-green-100 text-green-700' :
+                                chk.reason === 'illness' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {chk.reason}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600">{chk.clinicName} - {chk.vetName}</p>
+                            {chk.diagnosis && <p className="text-sm text-gray-500 mt-1">Diagnosis: {chk.diagnosis}</p>}
+                            {chk.cost && <p className="text-sm text-primary font-medium mt-1">₹{chk.cost}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No checkup records yet</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Weight History Section */}
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setExpandedSection(expandedSection === 'weight' ? null : 'weight')}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="text-orange-600" size={24} />
+                    <span className="font-semibold text-secondary">Weight History</span>
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                      {passport?.weightHistory.length || 0} entries
+                    </span>
+                  </div>
+                  {expandedSection === 'weight' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedSection === 'weight' && (
+                  <div className="border-t p-4">
+                    {passport?.weightHistory.length ? (
+                      <div className="space-y-2">
+                        {[...passport.weightHistory].reverse().map((wt, idx) => (
+                          <div key={wt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="text-gray-600">{formatDate(wt.date)}</span>
+                            <span className="font-bold text-secondary">{wt.weight} {wt.unit}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No weight records yet</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Reminders Section */}
+              <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setExpandedSection(expandedSection === 'reminders' ? null : 'reminders')}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <Bell className="text-red-600" size={24} />
+                    <span className="font-semibold text-secondary">Reminders</span>
+                    {passport?.reminders.filter(r => !r.isCompleted).length ? (
+                      <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full animate-pulse">
+                        {passport.reminders.filter(r => !r.isCompleted).length} pending
+                      </span>
+                    ) : null}
+                  </div>
+                  {expandedSection === 'reminders' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+                {expandedSection === 'reminders' && (
+                  <div className="border-t p-4">
+                    {passport?.reminders.length ? (
+                      <div className="space-y-3">
+                        {passport.reminders.filter(r => !r.isCompleted).map(rem => (
+                          <div key={rem.id} className={`flex items-center justify-between p-3 rounded-lg ${
+                            isOverdue(rem.dueDate) ? 'bg-red-50 border border-red-200' :
+                            isDueSoon(rem.dueDate) ? 'bg-orange-50 border border-orange-200' :
+                            'bg-gray-50'
+                          }`}>
+                            <div>
+                              <p className="font-medium text-secondary">{rem.title}</p>
+                              <p className="text-sm text-gray-500 capitalize">{rem.type}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className={`font-medium ${
+                                isOverdue(rem.dueDate) ? 'text-red-600' :
+                                isDueSoon(rem.dueDate) ? 'text-orange-600' : 'text-gray-600'
+                              }`}>
+                                {formatDate(rem.dueDate)}
+                              </p>
+                              <button
+                                onClick={() => {
+                                  StorageService.completeReminder(selectedPetId, rem.id);
+                                  setPassport(StorageService.getHealthPassportByPetId(selectedPetId) || null);
+                                  addToast('Reminder marked as complete!', 'success');
+                                }}
+                                className="text-xs text-primary hover:underline"
+                              >
+                                Mark Complete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">No pending reminders</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+// ==================== INSURANCE PAGE ====================
+
+const InsurancePage: React.FC = () => {
+  const { user } = useAuth();
+  const [providers, setProviders] = useState<InsuranceProvider[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<InsuranceProvider | null>(null);
+  const [userInsurances, setUserInsurances] = useState<PetInsurance[]>([]);
+
+  useEffect(() => {
+    setProviders(StorageService.getInsuranceProviders());
+    if (user) {
+      setUserInsurances(StorageService.getInsurancesByOwnerId(user.id));
+    }
+  }, [user]);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold text-secondary flex items-center gap-3">
+          <Shield className="text-primary" />
+          Pet Insurance
+        </h1>
+        <p className="text-gray-600 mt-1">Protect your furry friends with comprehensive coverage</p>
+      </div>
+
+      {/* Active Policies */}
+      {userInsurances.length > 0 && (
+        <div className="bg-white rounded-xl p-6 shadow-sm">
+          <h2 className="font-semibold text-secondary mb-4">Your Active Policies</h2>
+          <div className="space-y-3">
+            {userInsurances.filter(i => i.isActive).map(ins => (
+              <div key={ins.id} className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div>
+                  <p className="font-medium text-secondary">{ins.providerName}</p>
+                  <p className="text-sm text-gray-500">Policy: {ins.policyNumber}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Coverage</p>
+                  <p className="font-bold text-green-600">₹{ins.coverageAmount.toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Insurance Providers */}
+      <div className="space-y-4">
+        <h2 className="font-semibold text-secondary">Available Insurance Plans</h2>
+        {providers.map(provider => (
+          <div key={provider.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <Shield size={32} className="text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-secondary">{provider.name}</h3>
+                    <p className="text-sm text-gray-500">{provider.description}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                      <span className="text-sm font-medium">{provider.rating}</span>
+                      <span className="text-sm text-gray-400">({provider.reviewCount} reviews)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Plans */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                {provider.plans.map(plan => (
+                  <div key={plan.id} className={`border-2 rounded-xl p-4 ${
+                    plan.type === 'premium' ? 'border-primary bg-primary/5' :
+                    plan.type === 'comprehensive' ? 'border-yellow-400 bg-yellow-50' :
+                    'border-gray-200'
+                  }`}>
+                    {plan.type === 'premium' && (
+                      <span className="text-xs bg-primary text-white px-2 py-1 rounded-full">Popular</span>
+                    )}
+                    {plan.type === 'comprehensive' && (
+                      <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-1 rounded-full">Best Value</span>
+                    )}
+                    <h4 className="font-bold text-secondary mt-2">{plan.name}</h4>
+                    <div className="mt-2">
+                      <span className="text-2xl font-bold text-primary">₹{plan.monthlyPremium}</span>
+                      <span className="text-gray-500">/month</span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      or ₹{plan.annualPremium}/year (save ₹{plan.monthlyPremium * 12 - plan.annualPremium})
+                    </p>
+                    <div className="my-4 py-3 border-t border-b">
+                      <p className="text-sm text-gray-600">Coverage up to</p>
+                      <p className="text-xl font-bold text-secondary">₹{plan.coverageAmount.toLocaleString()}</p>
+                      {plan.deductible > 0 && (
+                        <p className="text-xs text-gray-500">Deductible: ₹{plan.deductible}</p>
+                      )}
+                    </div>
+                    <ul className="space-y-2 text-sm">
+                      {plan.features.slice(0, 4).map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <CheckCircle size={14} className="text-green-500" />
+                          <span className="text-gray-600">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <button className="w-full mt-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors">
+                      Get Quote
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Contact */}
+              <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t">
+                <a href={`tel:${provider.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-primary">
+                  <Phone size={16} />
+                  {provider.phone}
+                </a>
+                <a href={`mailto:${provider.email}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-primary">
+                  <Mail size={16} />
+                  {provider.email}
+                </a>
+                <a href={provider.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-gray-600 hover:text-primary">
+                  <ExternalLink size={16} />
+                  Visit Website
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Why Insurance */}
+      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6">
+        <h2 className="font-bold text-secondary mb-4">Why Pet Insurance?</h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          {[
+            { icon: Shield, title: 'Financial Protection', desc: 'Cover unexpected vet bills up to ₹5 lakhs' },
+            { icon: Heart, title: 'Peace of Mind', desc: 'Focus on your pet\'s health, not the cost' },
+            { icon: Zap, title: 'Quick Claims', desc: 'Get reimbursements within 7 working days' }
+          ].map((item, i) => (
+            <div key={i} className="bg-white rounded-lg p-4">
+              <item.icon className="text-primary mb-2" size={24} />
+              <h3 className="font-semibold text-secondary">{item.title}</h3>
+              <p className="text-sm text-gray-500 mt-1">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==================== NGO DIRECTORY PAGE ====================
+
+const NGODirectoryPage: React.FC = () => {
+  const [ngos, setNgos] = useState<NGO[]>([]);
+  const [filteredNgos, setFilteredNgos] = useState<NGO[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedNgo, setSelectedNgo] = useState<NGO | null>(null);
+
+  useEffect(() => {
+    const allNgos = StorageService.getNGOs();
+    setNgos(allNgos);
+    setFilteredNgos(allNgos);
+  }, []);
+
+  useEffect(() => {
+    let filtered = ngos;
+
+    if (searchQuery) {
+      filtered = filtered.filter(n =>
+        n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        n.city.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (selectedCity) {
+      filtered = filtered.filter(n => n.city === selectedCity);
+    }
+
+    if (selectedType) {
+      filtered = filtered.filter(n => n.type === selectedType);
+    }
+
+    setFilteredNgos(filtered);
+  }, [searchQuery, selectedCity, selectedType, ngos]);
+
+  const cities = [...new Set(ngos.map(n => n.city))].sort();
+  const types = [...new Set(ngos.map(n => n.type))].sort();
+
+  const serviceLabels: Record<NGOService, string> = {
+    rescue: 'Rescue',
+    shelter: 'Shelter',
+    adoption: 'Adoption',
+    medical: 'Medical Care',
+    vaccination: 'Vaccination',
+    sterilization: 'Sterilization',
+    foster: 'Foster Care',
+    burial: 'Burial',
+    ambulance: 'Ambulance',
+    'lost-found': 'Lost & Found',
+    training: 'Training',
+    grooming: 'Grooming'
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold text-secondary flex items-center gap-3">
+          <Building2 className="text-primary" />
+          NGO & Shelter Directory
+        </h1>
+        <p className="text-gray-600 mt-1">Find verified animal welfare organizations near you</p>
+      </div>
+
+      {/* Search & Filters */}
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search by name or city..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+            />
+          </div>
+          <select
+            value={selectedCity}
+            onChange={(e) => setSelectedCity(e.target.value)}
+            className="px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+          >
+            <option value="">All Cities</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+          >
+            <option value="">All Types</option>
+            {types.map(type => (
+              <option key={type} value={type} className="capitalize">{type}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {filteredNgos.map(ngo => (
+          <div key={ngo.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  {ngo.logo ? (
+                    <img src={ngo.logo} alt={ngo.name} className="w-12 h-12 rounded-lg object-cover" />
+                  ) : (
+                    <Building2 size={28} className="text-primary" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-bold text-secondary">{ngo.name}</h3>
+                      <p className="text-sm text-gray-500 capitalize">{ngo.type}</p>
+                    </div>
+                    {ngo.isVerified && (
+                      <BadgeCheck className="text-blue-500 flex-shrink-0" size={20} />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                    <span className="text-sm font-medium">{ngo.rating}</span>
+                    <span className="text-xs text-gray-400">({ngo.reviewCount})</span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mt-3 line-clamp-2">{ngo.description}</p>
+
+              <div className="flex items-center gap-2 mt-3 text-sm text-gray-500">
+                <MapPin size={14} />
+                <span>{ngo.address}, {ngo.city}</span>
+              </div>
+
+              {/* Services */}
+              <div className="flex flex-wrap gap-1 mt-3">
+                {ngo.services.slice(0, 4).map(service => (
+                  <span key={service} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    {serviceLabels[service]}
+                  </span>
+                ))}
+                {ngo.services.length > 4 && (
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    +{ngo.services.length - 4} more
+                  </span>
+                )}
+              </div>
+
+              {/* Stats */}
+              {(ngo.petsRescued || ngo.petsAdopted) && (
+                <div className="flex gap-4 mt-4 pt-4 border-t">
+                  {ngo.petsRescued && (
+                    <div>
+                      <p className="text-lg font-bold text-primary">{ngo.petsRescued.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">Pets Rescued</p>
+                    </div>
+                  )}
+                  {ngo.petsAdopted && (
+                    <div>
+                      <p className="text-lg font-bold text-green-600">{ngo.petsAdopted.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">Pets Adopted</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-2 mt-4">
+                <a
+                  href={`tel:${ngo.phone}`}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary-hover transition-colors"
+                >
+                  <Phone size={16} />
+                  Call
+                </a>
+                {ngo.whatsapp && (
+                  <a
+                    href={`https://wa.me/${ngo.whatsapp.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
+                  >
+                    <MessageCircle size={16} />
+                    WhatsApp
+                  </a>
+                )}
+                {ngo.website && (
+                  <a
+                    href={ngo.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <ExternalLink size={16} />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filteredNgos.length === 0 && (
+        <div className="bg-white rounded-xl p-8 text-center">
+          <Building2 size={48} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="font-semibold text-secondary mb-2">No Organizations Found</h3>
+          <p className="text-gray-500">Try adjusting your search or filters</p>
+        </div>
+      )}
+
+      {/* Emergency Contact */}
+      <div className="bg-red-50 rounded-xl p-6 border border-red-200">
+        <h2 className="font-bold text-red-800 mb-2">Emergency Animal Rescue</h2>
+        <p className="text-sm text-red-600 mb-4">
+          If you find an injured or distressed animal, contact these 24/7 helplines:
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <a href="tel:+919820011110" className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg text-red-600 font-medium">
+            <Phone size={16} />
+            PETA India: 9820011110
+          </a>
+          <a href="tel:+9811994499" className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg text-red-600 font-medium">
+            <Phone size={16} />
+            People For Animals: 9811994499
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ==================== PUBLIC PET PROFILE (FINDER VIEW) ====================
 
 const PublicPetProfile: React.FC = () => {
@@ -2140,6 +2935,21 @@ const App: React.FC = () => {
             <Route path="/dashboard/settings" element={
               <DashboardLayout>
                 <SettingsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/health" element={
+              <DashboardLayout>
+                <HealthPassportPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/insurance" element={
+              <DashboardLayout>
+                <InsurancePage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/ngos" element={
+              <DashboardLayout>
+                <NGODirectoryPage />
               </DashboardLayout>
             } />
 
