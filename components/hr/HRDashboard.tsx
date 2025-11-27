@@ -47,7 +47,7 @@ export const HRDashboard: React.FC<HRDashboardProps> = ({ currentUser }) => {
   });
 
   const [isLoading, setIsLoading] = useState(true);
-  const [showApiNotice, setShowApiNotice] = useState(!process.env.ANTHROPIC_API_KEY && !process.env.API_KEY);
+  const [showApiNotice, setShowApiNotice] = useState(!import.meta.env.VITE_ANTHROPIC_API_KEY && !import.meta.env.VITE_API_KEY);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Toast auto-dismiss

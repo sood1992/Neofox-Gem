@@ -22,9 +22,9 @@ import {
   RequirementMatch
 } from '../hrTypes';
 
-// Initialize Anthropic client - uses ANTHROPIC_API_KEY env var by default
+// Initialize Anthropic client - uses VITE_ANTHROPIC_API_KEY env var
 const getClient = () => {
-  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY || import.meta.env.VITE_API_KEY;
   if (!apiKey) return null;
   return new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
 };
